@@ -38,7 +38,7 @@ struct CBORValueDecoder {
             unboxer.dateDecodingStrategy = newValue
         }
     }
-    func decode<T: Decodable>(_ cbor: CBOR, type: T.Type) throws -> T {
+    func decode<T: Decodable>(_ type: T.Type, from cbor: CBOR) throws -> T {
         let decoder = ActiveCBORDecoder(cbor)
         return try T.init(from: decoder)
     }
@@ -80,3 +80,11 @@ struct ActiveCBORDecoder: Decoder {
     }
 
 }
+
+#if canImport(Combine)
+import Combine
+
+extension CBORValueDecoder: TopLevelDecoder {
+
+}
+#endif

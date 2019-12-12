@@ -42,7 +42,7 @@ public struct CBORDecoder {
         unboxer = CBORUnboxer()
     }
 
-    public func decode<T: Decodable>(from buffer: inout ByteBuffer, type: T.Type) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from buffer: inout ByteBuffer) throws -> T {
         let deserializer = Deserializer()
         var cbor = try deserializer.deserialize(from: &buffer)
         var tagged = false
@@ -56,13 +56,21 @@ public struct CBORDecoder {
 
         var decoder = CBORValueDecoder()
         decoder.dateDecodingStrategy = dateDecodingStrategy
-        return try decoder.decode(cbor, type: type)
+        return try decoder.decode(type, from: cbor)
 
     }
 
-    public func decode<T: Decodable>(_ data: Data, type: T.Type) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         var buffer = ByteBufferAllocator().buffer(capacity: data.count)
         buffer.writeBytes(data)
-        return try decode(from: &buffer, type: type)
+        return try decode(type, from: &buffer)
     }
 }
+
+#if canImport(Combine)
+import Combine
+
+extension CBORDecoder: TopLevelDecoder {
+
+}
+#endif

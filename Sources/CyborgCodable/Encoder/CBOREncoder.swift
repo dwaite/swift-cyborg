@@ -47,7 +47,7 @@ public struct CBOREncoder {
         }
     }
 
-    public func encode<T: Codable>(_ value: T) throws -> Data {
+    public func encode<T: Encodable>(_ value: T) throws -> Data {
         var cbor = try valueEncoder.encode(value)
         if cborDocumentTag {
             cbor = .tagged(tag: .cborSelfDescription, value: cbor)
@@ -58,7 +58,7 @@ public struct CBOREncoder {
         return buffer.readData(length: buffer.readableBytes)!
     }
 
-    public func encode<T: Codable>(into buffer: inout ByteBuffer, _ value: T) throws {
+    public func encode<T: Encodable>(_ value: T, into buffer: inout ByteBuffer) throws {
         var cbor = try valueEncoder.encode(value)
         if cborDocumentTag {
             cbor = .tagged(tag: .cborSelfDescription, value: cbor)
@@ -67,3 +67,11 @@ public struct CBOREncoder {
         try serializer.serialize(cbor, into: &buffer)
     }
 }
+
+
+#if canImport(Combine)
+import Combine
+
+extension CBOREncoder: TopLevelEncoder {
+}
+#endif

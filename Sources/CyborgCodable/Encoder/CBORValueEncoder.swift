@@ -42,7 +42,7 @@ public struct CBORValueEncoder {
         }
     }
 
-    public func encode<T: Codable>(_ value: T) throws -> CBOR {
+    public func encode<T: Encodable>(_ value: T) throws -> CBOR {
         let encoder = ActiveCBOREncoder(boxing: boxing)
         try value.encode(to: encoder)
         return encoder.finalize()
@@ -127,3 +127,10 @@ public class ActiveCBOREncoder: Encoder {
         return container.finalize()
     }
 }
+
+#if canImport(Combine)
+import Combine
+
+extension CBORValueEncoder: TopLevelEncoder {
+}
+#endif
