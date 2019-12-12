@@ -30,13 +30,13 @@ func repeating<T>(_ value: T, count: Int) -> AnyIterator<T> {
         guard counter > 0 else {
             return nil
         }
-        counter = counter - 1
+        counter -= 1
         return value
     }
 }
 extension Data {
     private static let hexAlphabet = "0123456789abcdef".unicodeScalars.map { $0 }
-    
+
     public func hexEncodedString() -> String {
         return String(self.reduce(into: "".unicodeScalars, { (result, value) in
             result.append(Data.hexAlphabet[Int(value/16)])
@@ -45,7 +45,7 @@ extension Data {
     }
 }
 
-class CBORSerializerTests: XCTestCase  {
+class CBORSerializerTests: XCTestCase {
     func testUnsignedIntegerValues() throws {
         let unsigned: CBOR = [0, 1, 4, 23, 0xff, 0x7fff_ffff_ffff_ffff]
         let serializer = Serializer()
@@ -75,7 +75,7 @@ class CBORSerializerTests: XCTestCase  {
         XCTAssertEqual(serialized, Data([
         0x85, 0xf5, 0xf4, 0xf6, 0xf7, 0xf8, 0xff]))
     }
-    
+
     func testFloatValues() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 32)
         let serializer = Serializer()
@@ -91,17 +91,17 @@ class CBORSerializerTests: XCTestCase  {
 
     func testObjectValues() throws {
         let object: CBOR = [
-            0:      0,
-            10:     1,
-            100:    2,
-            -1:     3,
-            "z":    4,
-            "aa":   5,
-            [100]:  6,
-            [-1]:   7,
-            false:  8,
-            0.0:    9,
-            -1.0:   10,
+            0: 0,
+            10: 1,
+            100: 2,
+            -1: 3,
+            "z": 4,
+            "aa": 5,
+            [100]: 6,
+            [-1]: 7,
+            false: 8,
+            0.0: 9,
+            -1.0: 10,
             .double(-.infinity): 11
         ]
 
@@ -116,10 +116,10 @@ class CBORSerializerTests: XCTestCase  {
 
         try serializer.serialize(object, into: &buffer)
         let deterministic = buffer.readData(length: buffer.readableBytes)
-        
+
         // will fail 1:4096 runs - may add more keys to increase the odds
         XCTAssert(nonDeterministic != deterministic)
-        
+
         let expected = Data([
             0xac,                                                // 12 pairs
             0x00, 0x00,                                          // 0:     0
@@ -135,7 +135,7 @@ class CBORSerializerTests: XCTestCase  {
             0xfb, 0xbf, 0xf0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa, // -1.0:  10
             0xfb, 0xff, 0xf0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xb  // -inf:  11
         ])
-        
+
         XCTAssert(deterministic == expected)
     }
 }

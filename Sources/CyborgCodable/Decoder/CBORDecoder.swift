@@ -22,12 +22,12 @@ import NIO
 import NIOFoundationCompat
 
 public struct CBORDecoder {
-    public var requireCBORDocumentTag : Bool
+    public var requireCBORDocumentTag: Bool
     public var dateDecodingStrategy: DateDecodingStrategy
-    
+
     var unboxer: CBORUnboxer
-    
-    var userInfo:[CodingUserInfoKey: Any] {
+
+    var userInfo: [CodingUserInfoKey: Any] {
         get {
             unboxer.userInfo
         }
@@ -35,17 +35,14 @@ public struct CBORDecoder {
             unboxer.userInfo = newValue
         }
     }
-    
+
     public init() {
         requireCBORDocumentTag = false
         dateDecodingStrategy = .secondsSince1970
         unboxer = CBORUnboxer()
     }
-    
-    public func decode<T: Decodable>(_ data: Data, type: T.Type) throws -> T {
-        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-        buffer.writeBytes(data)
-        
+
+    public func decode<T: Decodable>(from buffer: inout ByteBuffer, type: T.Type) throws -> T {
         let deserializer = Deserializer()
         var cbor = try deserializer.deserialize(from: &buffer)
         var tagged = false
@@ -56,9 +53,16 @@ public struct CBORDecoder {
         if !tagged && requireCBORDocumentTag {
             throw CBORDecoderError.expectedCBORDocumentTag
         }
-        
+
         var decoder = CBORValueDecoder()
         decoder.dateDecodingStrategy = dateDecodingStrategy
         return try decoder.decode(cbor, type: type)
+
+    }
+
+    public func decode<T: Decodable>(_ data: Data, type: T.Type) throws -> T {
+        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        return try decode(from: &buffer, type: type)
     }
 }

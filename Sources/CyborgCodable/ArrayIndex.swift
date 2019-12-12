@@ -16,9 +16,9 @@ import Foundation
 
 internal struct ArrayIndex: CodingKey {
     var index: Int
-    
+
     var stringValue: String { String(index) }
-    
+
     var intValue: Int? {
         get {
             index
@@ -34,7 +34,7 @@ internal struct ArrayIndex: CodingKey {
     init?(stringValue: String) {
         fatalError("Only supports initialization with array index")
     }
-    
+
     init(intValue: Int) {
         self.index = intValue
     }

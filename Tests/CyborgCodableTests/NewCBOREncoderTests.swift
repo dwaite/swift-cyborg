@@ -21,7 +21,7 @@ import XCTest
 @testable import CyborgCodable
 #endif
 
-struct Car : Codable, Hashable {
+struct Car: Codable, Hashable {
     var make: String
     var model: String
     var year: Int

@@ -18,10 +18,10 @@ import BigInt
 #endif
 public extension CBOR {
 
-    var intValue : Int? {
+    var intValue: Int? {
         return getIntegerValue()
     }
-    
+
     func getIntegerValue<I>() -> I?
         where I: BinaryInteger {
         switch self {
@@ -61,14 +61,14 @@ public extension CBOR {
         return nil
     }
 
-    var arrayValue : [CBOR]? {
+    var arrayValue: [CBOR]? {
         if case CBOR.array(let value) = self {
             return value
         }
         return nil
     }
 
-    var objectValue : [CBOR: CBOR]? {
+    var objectValue: [CBOR: CBOR]? {
         if case CBOR.object(let value) = self {
             return value
         }
@@ -88,9 +88,9 @@ public extension CBOR {
     var doubleValue: Double? {
         return getFloatingPoint()
     }
-    
+
     func getFloatingPoint<F>() -> F?
-        where F:BinaryFloatingPoint {
+        where F: BinaryFloatingPoint {
         switch self {
         case .double(let value):
             return F(exactly: value)

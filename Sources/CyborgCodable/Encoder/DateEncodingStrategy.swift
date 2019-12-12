@@ -24,25 +24,25 @@ public enum DateEncodingStrategy {
     case deferredToDate
     /// Encode the `Date` as a UNIX timestamp double.
     case secondsSince1970
-    
+
     /// Encode the `Date` as a tagged UNIX timestamp double.
     case taggedSecondsSince1970
-    
+
     /// Encode the `Date` as UNIX millisecond timestamp double.
     case millisecondsSince1970
-    
+
     /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
     case iso8601
-    
+
     /// Encode the `Date` as a tagged ISO-8601-formatted string (in RFC 3339 format).
     case taggedISO8601
-    
+
     /// Encode the `Date` as a string, formatted by the given formatter.
     case formatted(DateFormatter)
-    
+
     /// Encode the `Date` as a custom value encoded by the given closure.
-    case custom(_ fn: (_:Date, _:Encoder) throws -> ())
-        
+    case custom(_ encodingFunction: (_:Date, _:Encoder) throws -> Void)
+
     func encode(_ date: Date, _ encoder: () -> ActiveCBOREncoder) throws -> CBOR {
         switch self {
         case .secondsSince1970:
@@ -61,30 +61,30 @@ public enum DateEncodingStrategy {
             let dateEncoder = encoder()
             try date.encode(to: dateEncoder)
             return dateEncoder.finalize()
-        case .custom(let fn):
+        case .custom(let encodingFunction):
             let dateEncoder = encoder()
-            try fn(date, dateEncoder)
+            try encodingFunction(date, dateEncoder)
             return dateEncoder.finalize()
         }
     }
-    
-    static func encodeSecondsSince1970( _ date:Date) -> CBOR {
+
+    static func encodeSecondsSince1970( _ date: Date) -> CBOR {
         return CBOR(floatLiteral: date.timeIntervalSince1970)
     }
-    
-    static func encodeMillisecondsSince1970( _ date:Date) -> CBOR {
+
+    static func encodeMillisecondsSince1970( _ date: Date) -> CBOR {
         return CBOR(floatLiteral: date.timeIntervalSince1970 * 1000)
     }
-    
-    static func encodeTaggedSecondsSince1970( _ date:Date) -> CBOR {
+
+    static func encodeTaggedSecondsSince1970( _ date: Date) -> CBOR {
         return CBOR.tagged(tag: .secondsSinceEpoch, value: encodeSecondsSince1970(date))
     }
-    
-    static func encodeISO8609( _ date:Date) -> CBOR {
+
+    static func encodeISO8609( _ date: Date) -> CBOR {
         return CBOR.string(ISO8601DateFormatter().string(from: date))
     }
-    
-    static func encodeTaggedISO8609(_ date:Date) -> CBOR{
+
+    static func encodeTaggedISO8609(_ date: Date) -> CBOR {
         return CBOR.tagged(tag: .dateTimeString, value: encodeISO8609(date))
     }
 }

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//swiftlint:disable identifier_name
+
 import XCTest
 import Foundation
 import NIO
@@ -99,9 +101,9 @@ public class AdditionalInfoTests: XCTestCase {
         // illegal value
         ai = AdditionalInfo(rawValue: 255)
         XCTAssertNil(ai)
-        
+
     }
-    
+
     func testInitializeWithIB() {
         let ai = AdditionalInfo(initialByte: 0xe1)
         XCTAssertNotNil(ai)
@@ -130,26 +132,26 @@ public class SimpleValueTests: XCTestCase {
         XCTAssert(sv.rawValue == 10)
     }
     func testInitializeWithRawValue() {
-        var sv = SimpleValue(rawValue:  11)
+        var sv = SimpleValue(rawValue: 11)
         XCTAssert(sv != nil)
         XCTAssert(sv!.rawValue == 11)
 
-        sv = SimpleValue(rawValue:  24)
+        sv = SimpleValue(rawValue: 24)
         XCTAssertNil(sv)
 
-        sv = SimpleValue(rawValue:  31)
+        sv = SimpleValue(rawValue: 31)
         XCTAssertNil(sv)
-        
+
         sv = SimpleValue(rawValue: 32)
         XCTAssertNotNil(sv)
     }
-    
+
     func testWrite() {
         var buffer = ByteBufferAllocator().buffer(capacity: 1)
         let sv = SimpleValue(rawValue: 10)!
         sv.write(into: &buffer)
         XCTAssert(buffer.readInteger() == 0xea as UInt8)
-        
+
         let sv2 = SimpleValue(rawValue: 64)!
         sv2.write(into: &buffer)
         XCTAssert(buffer.readInteger() == 0xf8 as UInt8)
@@ -184,14 +186,14 @@ public class FloatValueTests: XCTestCase {
         var buffer = ByteBufferAllocator().buffer(capacity: 16)
         let halfFloat = FloatValue.half(UInt16(0x1234))
         halfFloat.write(into: &buffer)
-        
+
         XCTAssert(buffer.readInteger() == 0xf9 as UInt8)
         XCTAssert(buffer.readInteger() == 0x12 as UInt8)
         XCTAssert(buffer.readInteger() == 0x34 as UInt8)
 
         let float = FloatValue.float(0)
         float.write(into: &buffer)
-        
+
         XCTAssert(buffer.readInteger() == 0xfa as UInt8)
         XCTAssert(buffer.readInteger() == 0 as UInt32)
 
@@ -203,7 +205,7 @@ public class FloatValueTests: XCTestCase {
 }
 public class SizedValueTests: XCTestCase {
     var svi, sv8, sv16, sv32, sv64: SizedValue!
-    
+
     public override func setUp() {
         XCTAssertNoThrow( try {
             var buffer = ByteBufferAllocator().buffer(capacity: 10)
@@ -233,7 +235,7 @@ public class SizedValueTests: XCTestCase {
         XCTAssert(sv32 == .uint32(0x12345678))
         XCTAssert(sv64 == .uint64(0x12345678))
     }
-    
+
     func testValue() {
         XCTAssert(svi.value == 0x10)
         XCTAssert(sv8.value == 0xff)
@@ -248,7 +250,7 @@ public class SizedValueTests: XCTestCase {
         XCTAssert(sv32.additionalInfo == .uint32Following)
         XCTAssert(sv64.additionalInfo == .uint64Following)
     }
-    
+
     func testNormalized() {
         XCTAssert(svi.normalized()  == .immediate(ImmediateValue(rawValue: 0x10)!))
         XCTAssert(sv8.normalized()  == .uint8(0xff))
@@ -257,7 +259,7 @@ public class SizedValueTests: XCTestCase {
         XCTAssert(sv64.normalized() == .uint32(0x12345678))
         XCTAssert(SizedValue.uint64(1).normalized() == .immediate(ImmediateValue(rawValue: 0x01)!))
     }
-    
+
     func testWrite() {
         var buffer = ByteBufferAllocator().buffer(capacity: 32)
         svi.write(.unsignedInteger, into: &buffer)
@@ -288,7 +290,7 @@ public class DataItemHeaderTest: XCTestCase {
     }
     func testInitializeFromBuffer() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 32)
-        
+
         // test document without any byte or text data to simplify parsing
         let document: [UInt8] =
             [
@@ -301,8 +303,7 @@ public class DataItemHeaderTest: XCTestCase {
             0xff
         ]
         buffer.writeBytes(document)
-        let items = try (0..<7).map {
-            _ in
+        let items = try (0..<7).map { _ in
             try DataItemHeader.init(from: &buffer)
         }
         XCTAssert(items[0] == .array(count: nil))
@@ -314,8 +315,7 @@ public class DataItemHeaderTest: XCTestCase {
         XCTAssert(items[6] == .break)
 
         // test round-trip
-        items.forEach {
-            item in
+        items.forEach { item in
             item.write(into: &buffer)
         }
         let outputdocument = buffer.readBytes(length: buffer.readableBytes)!

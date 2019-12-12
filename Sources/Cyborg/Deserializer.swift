@@ -26,22 +26,23 @@ import BigInt
 import NIOFoundationCompat
 public struct Deserializer {
     public init() {}
-    
+
     public func deserialize(from buffer: inout ByteBuffer) throws -> CBOR {
         let header = try DataItemHeader(from: &buffer)
         return try deserialize(header: header, from: &buffer)
     }
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     public func deserialize(header: DataItemHeader, from buffer: inout ByteBuffer) throws -> CBOR {
         switch header {
-        case .unsignedInteger(let sv):
-            guard let value = CBOR.init(exactly: sv.value) else {
+        case .unsignedInteger(let sizedValue):
+            guard let value = CBOR.init(exactly: sizedValue.value) else {
                 throw DeserializationError.positiveIntegerOverflow(offset: buffer.readerIndex)
             }
             return value
         case .negativeInteger(let data):
 #if canImport(BigInt)
-            let bi = ~BigInt(data.value)
-            return CBOR.init(bi)
+            let bigInt = ~BigInt(data.value)
+            return CBOR.init(bigInt)
 #else
             if data.value > Int.max {
                 throw DeserializationError.negativeIntegerOverflow(offset: buffer.readerIndex)
@@ -63,18 +64,16 @@ public struct Deserializer {
             }
             return CBOR.string(string)
         case .array(let count?):
-            return CBOR.array(try (0..<count.value).map {
-                _ in
+            return CBOR.array(try (0..<count.value).map { _ in
                 try deserialize(from: &buffer)
             })
         case .object(let pairs?):
-            return CBOR.object(Dictionary(uniqueKeysWithValues: try (0..<pairs.value).map {
-                _ in
+            return CBOR.object(Dictionary(uniqueKeysWithValues: try (0..<pairs.value).map { _ in
                 try (deserialize(from: &buffer), deserialize(from: &buffer))
                 }))
-        case .tag(let id):
+        case .tag(let tag):
             let value = try deserialize(from: &buffer)
-            return CBOR.tagged(tag: Tag(rawValue: id.value), value: value)
+            return CBOR.tagged(tag: Tag(rawValue: tag.value), value: value)
         case .simple(let value):
             return CBOR.simple(value: value.rawValue)
         case .floatingPoint(let value):
@@ -88,7 +87,7 @@ public struct Deserializer {
             }
         case .break:
             throw WellFormednessError.unexpectedBreak(offset: buffer.readerIndex)
-            
+
         case .byteString(.none):
             var result = Data()
             while true {
@@ -127,7 +126,7 @@ public struct Deserializer {
                 offset = buffer.readerIndex
             }
         case .array(.none):
-            var array:[CBOR] = []
+            var array: [CBOR] = []
             while true {
                 let subheader = try DataItemHeader(from: &buffer)
                 if subheader == DataItemHeader.`break` {
@@ -136,7 +135,7 @@ public struct Deserializer {
                 array.append(try deserialize(header: subheader, from: &buffer))
             }
         case .object(.none):
-            var object:[CBOR: CBOR] = [:]
+            var object: [CBOR: CBOR] = [:]
             while true {
                 let subheader = try DataItemHeader(from: &buffer)
                 if subheader == DataItemHeader.`break` {

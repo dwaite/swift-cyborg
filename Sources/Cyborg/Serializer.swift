@@ -23,7 +23,6 @@ import CyborgBrain
 import BigInt
 #endif
 
-
 extension DataItemHeader.SizedValue {
     internal init(_ source: Int) {
         guard let value = UInt64(exactly: source) else {
@@ -37,16 +36,15 @@ extension DataItemHeader {
 #if canImport(BigInt)
     init?(_ source: BigInt) {
         if source >= 0 {
-            guard let dih = UInt64(exactly: source).map({ Self.unsignedInteger(SizedValue($0))}) else {
+            guard let dih = UInt64(exactly: source) else {
                 return nil
             }
-            self = dih
-        }
-        else {
-            guard let dih = UInt64(exactly: ~source).map({Self.negativeInteger(data: SizedValue($0))}) else {
+            self = Self.unsignedInteger(SizedValue(dih))
+        } else {
+            guard let dih = UInt64(exactly: ~source) else {
                 return nil
             }
-            self = dih
+            self = Self.negativeInteger(data: SizedValue(dih))
         }
     }
 #endif
@@ -61,34 +59,31 @@ public struct Serializer {
     public init(deterministicObjectOrder: Bool = true) {
         self.deterministicObjectOrder = deterministicObjectOrder
     }
+
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     public func serialize(_ cbor: CBOR, into buffer: inout ByteBuffer) throws {
         switch cbor {
         case .int(let value):
             DataItemHeader(value).write(into: &buffer)
-            break
 #if canImport(BigInt)
         case .bigInt(let value):
             guard let dih = DataItemHeader(value) else {
                 throw SerializationError.bigIntTooLarge
             }
             dih.write(into: &buffer)
-            break
 #endif
         case .data(let data):
             DataItemHeader.byteString(length: SizedValue(data.count)).write(into: &buffer)
             buffer.writeBytes(data)
-            break
         case .string(let str):
             let data = str.data(using: .utf8)!
             DataItemHeader.utf8TextString(length: SizedValue(data.count)).write(into: &buffer)
             buffer.writeBytes(data)
-            break
         case .array(let array):
             DataItemHeader.array(count: SizedValue(array.count)).write(into: &buffer)
             for item in array {
                 try serialize(item, into: &buffer)
             }
-            break
         case .object(let object):
             DataItemHeader.object(pairs: SizedValue(object.count)).write(into: &buffer)
             if !deterministicObjectOrder {
@@ -98,10 +93,9 @@ public struct Serializer {
                     try serialize(key, into: &buffer)
                     try serialize(value, into: &buffer)
                 }
-            }
-            else {
+            } else {
                 // output keys in lexigographic order.
-                
+
                 // we do this by:
                 // 1. writing the values while capturing the data (as views)
                 // 2. sorting those views lexigogaphically
@@ -109,15 +103,12 @@ public struct Serializer {
                 // 4. write the sorted keys and values
                 // 5. overwrite the values written in step 1 with the new buffer
                 let writerStartIndex = buffer.writerIndex
-                let kvs = try object.map {
-                    (arg:(key: CBOR, value: CBOR)) -> (ByteBufferView, ByteBufferView) in
-                    
-                    let (key, value) = arg
+                let kvs: [(ByteBufferView, ByteBufferView)] = try object.map { key, value in
                     let keyIndex = buffer.writerIndex
                     try serialize(key, into: &buffer)
                     let valueIndex = buffer.writerIndex
                     try serialize(value, into: &buffer)
-                    
+
                     return (
                         keyView: buffer.viewBytes(
                             at: keyIndex,
@@ -137,20 +128,16 @@ public struct Serializer {
                 buffer.moveWriterIndex(to: writerStartIndex)
                 buffer.writeBuffer(&tempBuffer)
             }
-            break
         case .tagged(let tag, let value):
             DataItemHeader.tag(id: SizedValue(tag.rawValue)).write(into: &buffer)
             try serialize(value, into: &buffer)
-            break
         case .simple(let value):
-            guard let sv = DataItemHeader.SimpleValue(rawValue: value) else {
+            guard let simpleValue = DataItemHeader.SimpleValue(rawValue: value) else {
                 throw WellFormednessError.invalidSimpleValue(value: value, offset: -1)
             }
-            DataItemHeader.simple(sv).write(into: &buffer)
-            break
+            DataItemHeader.simple(simpleValue).write(into: &buffer)
         case .double(let double):
             DataItemHeader.floatingPoint(.double(double)).write(into: &buffer)
-            break
         }
     }
 }

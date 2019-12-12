@@ -21,15 +21,15 @@ import Cyborg
 #endif
 
 public struct CBOREncoder {
-    public var cborDocumentTag : Bool = false
+    public var cborDocumentTag: Bool = false
     public var deterministicObjectOrder: Bool = true
 
     private var valueEncoder: CBORValueEncoder
-    
+
     public init() {
         valueEncoder = CBORValueEncoder()
     }
-    public var userInfo: [CodingUserInfoKey : Any] {
+    public var userInfo: [CodingUserInfoKey: Any] {
         get {
             valueEncoder.userInfo
         }
@@ -47,7 +47,7 @@ public struct CBOREncoder {
         }
     }
 
-    public func encode<T:Codable>(_ value: T) throws -> Data {
+    public func encode<T: Codable>(_ value: T) throws -> Data {
         var cbor = try valueEncoder.encode(value)
         if cborDocumentTag {
             cbor = .tagged(tag: .cborSelfDescription, value: cbor)
@@ -56,5 +56,14 @@ public struct CBOREncoder {
         var buffer = ByteBufferAllocator().buffer(capacity: 64)
         try serializer.serialize(cbor, into: &buffer)
         return buffer.readData(length: buffer.readableBytes)!
+    }
+
+    public func encode<T: Codable>(into buffer: inout ByteBuffer, _ value: T) throws {
+        var cbor = try valueEncoder.encode(value)
+        if cborDocumentTag {
+            cbor = .tagged(tag: .cborSelfDescription, value: cbor)
+        }
+        let serializer = Serializer(deterministicObjectOrder: deterministicObjectOrder)
+        try serializer.serialize(cbor, into: &buffer)
     }
 }

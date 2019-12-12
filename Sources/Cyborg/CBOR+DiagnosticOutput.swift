@@ -19,23 +19,21 @@ public enum DiagnosticBinaryEncoding {
     case base32
     case base64
     case base64url
-    
+
     private static let lowercaseHexadecimalAlphabet = "0123456789abcdef".unicodeScalars.map { $0 }
     private static let uppercaseHexadecimalAlphabet = "0123456789ABCDEF".unicodeScalars.map { $0 }
     private static let base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".unicodeScalars.map { $0 }
-    
+
     public func encode(_ value: Data) -> String {
         switch self {
         case .uppercaseHexadecimal:
-            return "h'" + String(value.reduce(into: "".unicodeScalars, {
-                (output, byte) in
+            return "h'" + String(value.reduce(into: "".unicodeScalars, { (output, byte) in
                 let value = Int(byte)
                 output.append(DiagnosticBinaryEncoding.uppercaseHexadecimalAlphabet[value / 16])
                 output.append(DiagnosticBinaryEncoding.uppercaseHexadecimalAlphabet[value % 16])
             })) + "'"
         case .lowercaseHexadecimal:
-            return "h'" + String(value.reduce(into: "".unicodeScalars, {
-                (output, byte) in
+            return "h'" + String(value.reduce(into: "".unicodeScalars, { (output, byte) in
                 let value = Int(byte)
                 output.append(DiagnosticBinaryEncoding.lowercaseHexadecimalAlphabet[value / 16])
                 output.append(DiagnosticBinaryEncoding.lowercaseHexadecimalAlphabet[value % 16])
@@ -50,30 +48,29 @@ public enum DiagnosticBinaryEncoding {
     }
     // +========+========+========+========+========+
     // +11111222+22333334+44445555+56666677+77788888+
-    
+
     //    size_t base32_encode(const uint8_t *data, size_t length, char *result, size_t bufSize) {
-    
+
     private func base32Encode(_ value: Data) -> String {
         guard !value.isEmpty else {
             return ""
         }
         let length = value.count
         var result = "".unicodeScalars
-        value.withUnsafeBytes {
-            (data: UnsafeRawBufferPointer) -> Void in
+        value.withUnsafeBytes { data in
             var buffer = data[0]
             var next = 1
             var bitsLeft = 8
             while bitsLeft > 0 || next < length {
                 if bitsLeft < 5 {
                     if next < length {
-                        buffer <<= 8;
+                        buffer <<= 8
                         buffer |= data[next] & 0xFF
                         next += 1
                         bitsLeft += 8
                     } else {
-                        let pad = 5 - bitsLeft;
-                        buffer <<= pad;
+                        let pad = 5 - bitsLeft
+                        buffer <<= pad
                         bitsLeft += pad
                     }
                 }
@@ -90,7 +87,7 @@ public enum DiagnosticBinaryEncoding {
             .replacingOccurrences(of: "/", with: "_")
     }
 }
-extension CBOR : CustomStringConvertible {
+extension CBOR: CustomStringConvertible {
     // Note: we skip the solidus/forward slash as it is not necessary
     private static let jsonStringEscapeDictionary = [
         0x08: "\\b",
@@ -101,7 +98,8 @@ extension CBOR : CustomStringConvertible {
         0x5c: "\\\\",
         0x22: "\\\""
     ]
-    
+
+    //swiftlint:disable:next cyclomatic_complexity function_body_length
     public func diagnosticString(_ options: DiagnosticBinaryEncoding = .uppercaseHexadecimal) -> String {
         switch self {
         case .int(let value):
@@ -138,15 +136,13 @@ extension CBOR : CustomStringConvertible {
         case .array(let value):
             return "[\(value.map({$0.description}).joined(separator: ","))]"
         case .object(let value):
-            let joined = value.map {
-                key, value in
+            let joined = value.map { key, value in
                 return "\(key):\(value)"
                 }.joined(separator: ",")
             return "{\(joined)}"
         case .string(let value):
             var view = value.unicodeScalars
-            view.indices.reversed().forEach {
-                index in
+            view.indices.reversed().forEach { index in
                 let scalar = view[index]
                 if let escapedValue = CBOR.jsonStringEscapeDictionary[Int(scalar.value)] {
                     let after = view.index(after: index)
@@ -163,7 +159,7 @@ extension CBOR : CustomStringConvertible {
             return "\"\(String(view))\""
         }
     }
-    
+
     public var description: String {
         return diagnosticString()
     }

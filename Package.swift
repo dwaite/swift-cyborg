@@ -78,10 +78,9 @@ let targets: [Target] = [
         name: "CyborgTests",
         dependencies: ["Cyborg", "CwlPreconditionTesting"],
         path: "Tests"
-    ),
+    )
 ]
 #endif
-
 
 let package = Package(
     name: "Cyborg",

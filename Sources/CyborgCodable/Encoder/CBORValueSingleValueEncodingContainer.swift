@@ -24,10 +24,10 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
     var codingPath: [CodingKey] {
         boxing.codingPath
     }
-    
+
     var boxing: CBORBoxing
     var state: CBOR
-    
+
     init(boxing: CBORBoxing) {
         self.boxing = boxing
         state = CBOR.undefined
@@ -39,52 +39,52 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
         assertFirstEncode()
         state = .null
     }
-    
+
     func encode(_ value: Bool) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: String) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Double) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Float) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Int) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Int8) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Int16) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Int32) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: Int64) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: UInt) throws {
         assertFirstEncode()
 #if canImport(BigInt)
@@ -93,22 +93,22 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
         state = try boxing.box(value)
 #endif
     }
-    
+
     func encode(_ value: UInt8) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: UInt16) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: UInt32) throws {
         assertFirstEncode()
         state = boxing.box(value)
     }
-    
+
     func encode(_ value: UInt64) throws {
         assertFirstEncode()
 #if canImport(BigInt)
@@ -117,17 +117,17 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
         state = try boxing.box(value)
 #endif
     }
-    
+
     func encode(_ value: CBOR) throws {
         assertFirstEncode()
         state = value
     }
-    
-    func encode<T>(_ value: T) throws where T : Encodable {
+
+    func encode<T>(_ value: T) throws where T: Encodable {
         assertFirstEncode()
         state = try boxing.box(value)
     }
-    
+
     func finalize() -> CBOR {
         defer {
             state = CBOR.undefined

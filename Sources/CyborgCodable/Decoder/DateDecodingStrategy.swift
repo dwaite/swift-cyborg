@@ -18,7 +18,7 @@ import Foundation
 import Cyborg
 #endif
 
-public enum DateConversionError : Error {
+public enum DateConversionError: Error {
     case notStringInput
     case formatterConversionFailed
     case notFloatingPoint
@@ -32,25 +32,25 @@ public enum DateDecodingStrategy {
     case deferredToDate
     /// Encode the `Date` as a UNIX timestamp double.
     case secondsSince1970
-    
+
     /// Encode the `Date` as a tagged UNIX timestamp double.
     case taggedSecondsSince1970
-    
+
     /// Encode the `Date` as UNIX millisecond timestamp double.
     case millisecondsSince1970
-    
+
     /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
     case iso8601
-    
+
     /// Encode the `Date` as a tagged ISO-8601-formatted string (in RFC 3339 format).
     case taggedISO8601
-    
+
     /// Encode the `Date` as a string, formatted by the given formatter.
     case formatted(DateFormatter)
-    
+
     /// Encode the `Date` as a custom value encoded by the given closure.
-    case custom(_ fn: (_:Decoder) throws -> Date)
-        
+    case custom(_ customFunction: (_:Decoder) throws -> Date)
+
     func decode(_ cbor: CBOR, _ decoder: () -> ActiveCBORDecoder) throws -> Date {
         switch self {
         case .secondsSince1970:
@@ -74,26 +74,26 @@ public enum DateDecodingStrategy {
         case .deferredToDate:
             let dateDecoder = decoder()
             return try Date(from: dateDecoder)
-        case .custom(let fn):
+        case .custom(let customFunction):
             let dateDecoder = decoder()
-            return try fn(dateDecoder)
+            return try customFunction(dateDecoder)
         }
     }
-    
+
     static func decodeSecondsSince1970( _ cbor: CBOR) throws -> Date {
         guard case .double(let double) = cbor else {
             throw DateConversionError.notFloatingPoint
         }
         return Date(timeIntervalSince1970: double)
     }
-    
+
     static func decodeMillisecondsSince1970( _ cbor: CBOR) throws -> Date {
         guard case .double(let double) = cbor else {
             throw DateConversionError.notFloatingPoint
         }
         return Date(timeIntervalSince1970: double * 1000)
     }
-    
+
     static func decodeTaggedSecondsSince1970( _ cbor: CBOR) throws -> Date {
         guard case .tagged(let tag, let value) = cbor else {
             throw DateConversionError.expectedTagged
@@ -103,7 +103,7 @@ public enum DateDecodingStrategy {
         }
         return try decodeSecondsSince1970(value)
     }
-    
+
     static func decodeISO8609( _ cbor: CBOR) throws -> Date {
         guard case .string(let string) = cbor else {
             throw DateConversionError.notStringInput
@@ -113,8 +113,8 @@ public enum DateDecodingStrategy {
         }
         return date
     }
-    
-    static func decodeTaggedISO8609(_ cbor: CBOR) throws -> Date{
+
+    static func decodeTaggedISO8609(_ cbor: CBOR) throws -> Date {
         guard case .tagged(let tag, let value) = cbor else {
             throw DateConversionError.expectedTagged
         }

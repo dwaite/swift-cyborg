@@ -19,7 +19,7 @@ import BigInt
 #endif
 
 /// General-purpose data structure to represent CBOR data.
-public enum CBOR : Hashable, Equatable {
+public enum CBOR: Hashable, Equatable {
     case int(Int)
 #if canImport(BigInt)
     case bigInt(BigInt)
@@ -31,7 +31,7 @@ public enum CBOR : Hashable, Equatable {
     indirect case tagged(tag: Tag, value: CBOR)
     case simple(value: UInt8)
     case double(Double)
-    
+
     public static let `false`   = CBOR.simple(value: 20)
     public static let `true`    = CBOR.simple(value: 21)
     public static let `null`    = CBOR.simple(value: 22)

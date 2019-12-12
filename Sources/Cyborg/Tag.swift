@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-public struct Tag : RawRepresentable, Hashable, Equatable {
+public struct Tag: RawRepresentable, Hashable, Equatable {
     public var rawValue: UInt64
-    
+
     public init(rawValue: UInt64) {
         self.rawValue = rawValue
     }

@@ -22,13 +22,14 @@ import Cyborg
 import BigInt
 #endif
 
-class CBORUnkeyedEncodingContainer : UnkeyedEncodingContainer, DeferredContainer {
+class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer {
+
     var state: [DeferrableCBOR]
     var boxing: CBORBoxing
     var codingPath: [CodingKey] {
         boxing.codingPath
     }
-    
+
     init(boxing: CBORBoxing) {
         self.boxing = boxing
         self.state = []
@@ -41,35 +42,35 @@ class CBORUnkeyedEncodingContainer : UnkeyedEncodingContainer, DeferredContainer
     func encode(_ value: String) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Double) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Float) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Int) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Int8) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Int16) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Int32) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: Int64) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: UInt) throws {
 #if canImport(BigInt)
         state.append(.cbor(boxing.box(value)))
@@ -77,19 +78,19 @@ class CBORUnkeyedEncodingContainer : UnkeyedEncodingContainer, DeferredContainer
         try state.append(.cbor(boxing.box(value)))
 #endif
     }
-    
+
     func encode(_ value: UInt8) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: UInt16) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: UInt32) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encode(_ value: UInt64) throws {
 #if canImport(BigInt)
         state.append(.cbor(boxing.box(value)))
@@ -97,43 +98,53 @@ class CBORUnkeyedEncodingContainer : UnkeyedEncodingContainer, DeferredContainer
         try state.append(.cbor(boxing.box(value)))
 #endif
     }
-    
+
     func encode(_ value: Bool) throws {
         state.append(.cbor(boxing.box(value)))
     }
-    
+
     func encodeNil() throws {
         state.append(.cbor(boxing.boxNil()))
     }
 
-    func encode<T>(_ value: T) throws where T : Encodable {
+    func encode<T>(_ value: T) throws where T: Encodable {
         state.append(.cbor(try boxing.box(value)))
     }
-    
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) ->
+        KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+            let container = CBORKeyedEncodingContainer<NestedKey>(
+                boxing: boxing.withSubKey(ArrayIndex(intValue: state.count)),
+                keyedType: keyType)
+            state.append(.deferred(state: container))
+            return KeyedEncodingContainer(container)
     }
-    
+
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
+        let container = CBORUnkeyedEncodingContainer(boxing: boxing.withSubKey(ArrayIndex(intValue: state.count)))
+        state.append(.deferred(state: container))
+        return container
     }
-    
+
     func superEncoder() -> Encoder {
-        fatalError()
+        let encoder = ActiveCBOREncoder(boxing: boxing, subKey: ArrayIndex(intValue: state.count))
+        state.append(.encoder(encoder))
+        return encoder
     }
-    
+
     func finalize() -> CBOR {
         defer {
             state = []
         }
         return CBOR.array(
-            state.map {
-                value in
+            state.map { value in
                 switch value {
                 case .cbor(let data):
                     return data
                 case .deferred(var container):
                     return container.finalize()
+                case .encoder(let encoder):
+                    return encoder.finalize()
                 }
             }
         )

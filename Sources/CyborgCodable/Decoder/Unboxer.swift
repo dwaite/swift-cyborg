@@ -20,17 +20,18 @@ import Cyborg
 
 enum CBORUnboxingError: Error {
     case incorrectType(type: Any.Type )
+    case incorrectlyFormattedURL
 }
 struct CBORUnboxer {
     var codingPath: [CodingKey]
-    var userInfo: [CodingUserInfoKey : Any]
+    var userInfo: [CodingUserInfoKey: Any]
     var dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
-    
+
     init() {
         codingPath = []
         userInfo = [:]
     }
-    
+
     func withSubkey(_ subkey: CodingKey) -> Self {
         var state = self
         state.codingPath += [subkey]
@@ -47,7 +48,7 @@ struct CBORUnboxer {
         }
         return result
     }
-    
+
     func decode(_ cbor: CBOR, _ type: String.Type) throws -> String {
         guard let result = cbor.stringValue else {
             throw CBORUnboxingError.incorrectType(type: type)
@@ -139,11 +140,34 @@ struct CBORUnboxer {
         return result
     }
 
-    func decodeDecodable<T>(_ cbor: CBOR, _ type: T.Type) throws -> T where T : Decodable {
-        if type == Date.self {
+    // swiftlint:disable force_cast
+    func decodeDecodable<T>(_ cbor: CBOR, _ type: T.Type) throws -> T where T: Decodable {
+        switch type {
+        case is Date.Type:
             return try dateDecodingStrategy.decode(cbor) { ActiveCBORDecoder(unboxer: self, cbor: cbor) } as! T
+        case is CBOR.Type:
+            return cbor as! T
+        case is Data.Type:
+            guard let data = cbor.dataValue else {
+                throw CBORUnboxingError.incorrectType(type: Data.self)
+            }
+            return data as! T
+        case is [UInt8].Type:
+            guard let data = cbor.dataValue else {
+                throw CBORUnboxingError.incorrectType(type: Data.self)
+            }
+            return [UInt8](data) as! T
+        case is URL.Type:
+            guard let text = cbor.stringValue else {
+                throw CBORUnboxingError.incorrectType(type: URL.self)
+            }
+            guard let url = URL(string: text) else {
+                throw CBORUnboxingError.incorrectlyFormattedURL
+            }
+            return url as! T
+        default:
+            let decoder = ActiveCBORDecoder(unboxer: self, cbor: cbor)
+            return try type.init(from: decoder)
         }
-        let decoder = ActiveCBORDecoder(unboxer: self, cbor: cbor)
-        return try type.init(from: decoder)
     }
 }

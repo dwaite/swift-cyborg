@@ -20,12 +20,14 @@ public enum DeserializationError: Error {
 }
 
 public enum WellFormednessError: Error {
-    case unknownInitialByte(ib: UInt8, offset: Int)
+    case unknownInitialByte(initialByte: UInt8, offset: Int)
     case invalidSimpleValue(value: UInt8, offset: Int)
     case unexpectedBreak(offset: Int)
     case invalidIndefiniteChunk(offset: Int)
 }
 
 public enum SerializationError: Error {
+#if canImport(BigInt)
     case bigIntTooLarge
+#endif
 }

@@ -18,8 +18,7 @@ import Foundation
 import BigInt
 #endif
 
-extension CBOR :
-    ExpressibleByNilLiteral,
+extension CBOR: ExpressibleByNilLiteral,
     ExpressibleByArrayLiteral,
     ExpressibleByStringLiteral,
     ExpressibleByBooleanLiteral,
@@ -63,10 +62,9 @@ extension CBOR {
 extension CBOR {
 #if canImport(BigInt)
     public init<BI>(_ source: BI) where BI: BinaryInteger {
-        if let i = Int(exactly: source) {
-            self = .int(i)
-        }
-        else {
+        if let int = Int(exactly: source) {
+            self = .int(int)
+        } else {
             self = .bigInt(BigInt(source))
         }
     }
@@ -85,10 +83,9 @@ extension CBOR {
     }
 
     public init?<BI>(exactly source: BI) where BI: BinaryInteger {
-        if let i = Int(exactly: source) {
-            self = .int(i)
-        }
-        else {
+        if let int = Int(exactly: source) {
+            self = .int(int)
+        } else {
             return nil
         }
     }

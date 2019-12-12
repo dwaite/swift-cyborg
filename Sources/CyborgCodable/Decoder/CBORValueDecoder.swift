@@ -18,14 +18,14 @@ import Foundation
 import Cyborg
 #endif
 
-enum CBORDecoderError : LocalizedError {
+enum CBORDecoderError: LocalizedError {
     case notUnkeyedContainer
     case notKeyedContainer
     case expectedCBORDocumentTag
 }
 struct CBORValueDecoder {
     var unboxer: CBORUnboxer
-    
+
     init() {
         self.unboxer = CBORUnboxer()
     }
@@ -33,7 +33,7 @@ struct CBORValueDecoder {
         get {
             unboxer.dateDecodingStrategy
         }
-        
+
         set {
             unboxer.dateDecodingStrategy = newValue
         }
@@ -52,32 +52,31 @@ struct ActiveCBORDecoder: Decoder {
         self.unboxer = CBORUnboxer()
         self.cbor = cbor
     }
-    
+
     init(unboxer: CBORUnboxer, cbor: CBOR) {
         self.unboxer = unboxer
         self.cbor = cbor
     }
     var codingPath: [CodingKey] { unboxer.codingPath }
-    var userInfo: [CodingUserInfoKey : Any] { unboxer.userInfo }
-    
-    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    var userInfo: [CodingUserInfoKey: Any] { unboxer.userInfo }
+
+    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         guard case .object(let object) = cbor else {
             throw CBORDecoderError.notKeyedContainer
         }
 
         return KeyedDecodingContainer(CBORKeyedDecodingContainer<Key>(object, unboxer))
     }
-    
+
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         guard case .array(let array) = cbor else {
             throw CBORDecoderError.notUnkeyedContainer
         }
         return CBORUnkeyedDecodingContainer(array, unboxer)
     }
-    
+
     func singleValueContainer() throws -> SingleValueDecodingContainer {
         CBORSingleValueDecodingContainer(cbor, unboxer)
     }
-    
-    
+
 }

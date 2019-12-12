@@ -30,7 +30,7 @@ class CBORTests: XCTestCase {
     //ExpressibleByIntegerLiteral,
     //ExpressibleByDictionaryLiteral
     func testLiteralInitialization() {
-        let c:CBOR = [
+        let cbor: CBOR = [
             nil,
             1,
             false,
@@ -41,12 +41,12 @@ class CBORTests: XCTestCase {
                 1: "baz"
             ]
         ]
-        
-        guard let array = c.arrayValue else {
+
+        guard let array = cbor.arrayValue else {
             XCTAssert(false)
             return
         }
-        
+
         XCTAssert(array.count == 6)
         XCTAssert(array[0] == nil)
         XCTAssert(array[0] == CBOR.null)
@@ -70,24 +70,24 @@ class CBORTests: XCTestCase {
         XCTAssert(object["foo"] == "bar")
         XCTAssert(object[1] == "baz")
     }
-    
+
     func testOtherInitializers() {
 #if canImport(BigInt)
-        let c: CBOR = [
+        let cbor: CBOR = [
             CBOR(Data()),
-            CBOR(BigInt(UInt64.max)),
+            CBOR(BigInt(UInt64.max))
         ]
 #else
-        let c: CBOR = [
-            CBOR(Data()),
+        let cbor: CBOR = [
+            CBOR(Data())
         ]
 #endif
 
-        guard let array = c.arrayValue else {
+        guard let array = cbor.arrayValue else {
             XCTAssert(false)
             return
         }
-        
+
         XCTAssert(array[0].dataValue == Data())
 #if canImport(BigInt)
         XCTAssert(array[1] == CBOR.bigInt(BigInt(UInt64.max)))

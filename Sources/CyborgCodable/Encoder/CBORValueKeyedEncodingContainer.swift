@@ -26,14 +26,15 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
     var codingPath: [CodingKey] {
         boxing.codingPath
     }
-    
+
     let keyedType: Key.Type
 
     let boxing: CBORBoxing
     var state: [CBOR: DeferrableCBOR]
 
-    func assertKeyNotPresent(forKey key: Key) {
-        assert(state[toCBORKey(key)] == nil, "value may only be set once per key on CBORKeyedEncodingContainer (duplicate = \"\(key)\"")
+    func assertKeyNotPresent(forKey key: CodingKey) {
+        assert(state[toCBORKey(key)] == nil,
+               "value may only be set once per key on CBORKeyedEncodingContainer (duplicate = \"\(key)\"")
     }
     init(boxing: CBORBoxing, state: [CBOR: DeferrableCBOR] = [:], keyedType: Key.Type) {
         self.boxing = boxing
@@ -44,37 +45,37 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.boxNil())
     }
-    
+
     func encode(_ value: Bool, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: String, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Double, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Float, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Int, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Int64, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: UInt64, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
 #if canImport(BigInt)
@@ -88,17 +89,17 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Int16, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: Int32, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: UInt, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
 #if canImport(BigInt)
@@ -107,17 +108,17 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
         state[toCBORKey(key)] = try .cbor(boxing.box(value))
 #endif
     }
-    
+
     func encode(_ value: UInt8, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: UInt16, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
     }
-    
+
     func encode(_ value: UInt32, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
@@ -129,28 +130,42 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
         state[toCBORKey(key)] = .cbor(value)
     }
 
-    func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
+    func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
         assertKeyNotPresent(forKey: key)
         let subBox = boxing.withSubKey(key)
         state[toCBORKey(key)] = try .cbor(subBox.box(value))
     }
-    
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+
+    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) ->
+        KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+            assertKeyNotPresent(forKey: key)
+            let container = CBORKeyedEncodingContainer<NestedKey>(boxing: boxing.withSubKey(key), keyedType: keyType)
+            state[toCBORKey(key)] = .deferred(state: container)
+            return KeyedEncodingContainer(container)
     }
-    
+
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        fatalError()
+        assertKeyNotPresent(forKey: key)
+        let container = CBORUnkeyedEncodingContainer(boxing: boxing.withSubKey(key))
+        state[toCBORKey(key)] = .deferred(state: container)
+        return container
     }
-    
+
     func superEncoder() -> Encoder {
-        fatalError()
+        let key = CBORSuperKey()
+        assertKeyNotPresent(forKey: key)
+        let encoder = ActiveCBOREncoder(boxing: boxing, subKey: key)
+        state[toCBORKey(key)] = .encoder(encoder)
+        return encoder
     }
-    
+
     func superEncoder(forKey key: Key) -> Encoder {
-        fatalError()
+        assertKeyNotPresent(forKey: key)
+        let encoder = ActiveCBOREncoder(boxing: boxing, subKey: key)
+        state[toCBORKey(key)] = .encoder(encoder)
+        return encoder
     }
-    
+
     func finalize() -> CBOR {
         defer {
             state = [:]
@@ -162,6 +177,8 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
                     return cbor
                 case .deferred(var container):
                     return container.finalize()
+                case .encoder(let encoder):
+                    return encoder.finalize()
                 }
             }
         )
