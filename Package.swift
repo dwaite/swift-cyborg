@@ -94,7 +94,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting", .branch("master")),
         .package(url: "https://github.com/dwaite/BigInt", .branch("master")),
-        .package(url: "https://github.com/apple/swift-nio", .branch("master"))
+        .package(url: "https://github.com/apple/swift-nio", .branch("main"))
     ],
     targets: targets,
     swiftLanguageVersions: [.v5]

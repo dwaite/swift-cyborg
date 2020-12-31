@@ -49,16 +49,16 @@ class NewCBOREncoderTests: XCTestCase {
         let encoder = CBORValueEncoder()
         let encoded = try encoder.encode(dealership)
         let decoder = CBORValueDecoder()
-        let decoded = try decoder.decode(encoded, type: Dealership.self)
+        let decoded = try decoder.decode(Dealership.self, from: encoded)
         XCTAssert(dealership == decoded)
     }
 
     func testDataRoundTrip() throws {
-         let encoder = CBOREncoder()
-         let encoded = try encoder.encode(dealership)
-         let decoder = CBORDecoder()
-         let decoded = try decoder.decode(encoded, type: Dealership.self)
-         XCTAssert(dealership == decoded)
+        let encoder = CBOREncoder()
+        let encoded = try encoder.encode(dealership)
+        let decoder = CBORDecoder()
+        let decoded = try decoder.decode(Dealership.self, from: encoded)
+        XCTAssert(dealership == decoded)
      }
 
 }
