@@ -92,9 +92,12 @@ let package = Package(
     ],
     products: products,
     dependencies: [
-        .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting", .branch("master")),
-        .package(url: "https://github.com/dwaite/BigInt", .branch("master")),
-        .package(url: "https://github.com/apple/swift-nio", .branch("main"))
+        .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting",
+                 .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/attaswift/BigInt",
+                 .upToNextMajor(from: "5.2.1")),
+        .package(url: "https://github.com/apple/swift-nio",
+                 .upToNextMajor(from: "2.25.1"))
     ],
     targets: targets,
     swiftLanguageVersions: [.v5]
