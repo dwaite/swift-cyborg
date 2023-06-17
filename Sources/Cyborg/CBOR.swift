@@ -14,14 +14,14 @@
 
 import Foundation
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 /// General-purpose data structure to represent CBOR data.
 public enum CBOR: Hashable, Equatable {
     case int(Int)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
     case bigInt(BigInt)
 #endif
     case data(Data)

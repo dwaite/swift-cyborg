@@ -14,8 +14,8 @@
 
 import Foundation
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 #if MODULAR_DEVELOPMENT
@@ -78,7 +78,7 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
 
     func encode(_ value: UInt64, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
 #else
         state[toCBORKey(key)] = try .cbor(boxing.box(value))
@@ -102,7 +102,7 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
 
     func encode(_ value: UInt, forKey key: Key) throws {
         assertKeyNotPresent(forKey: key)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state[toCBORKey(key)] = .cbor(boxing.box(value))
 #else
         state[toCBORKey(key)] = try .cbor(boxing.box(value))

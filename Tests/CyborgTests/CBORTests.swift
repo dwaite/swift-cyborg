@@ -15,8 +15,8 @@
 import Foundation
 import XCTest
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 @testable import Cyborg
@@ -72,7 +72,7 @@ class CBORTests: XCTestCase {
     }
 
     func testOtherInitializers() {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         let cbor: CBOR = [
             CBOR(Data()),
             CBOR(BigInt(UInt64.max))
@@ -89,7 +89,7 @@ class CBORTests: XCTestCase {
         }
 
         XCTAssert(array[0].dataValue == Data())
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         XCTAssert(array[1] == CBOR.bigInt(BigInt(UInt64.max)))
 #endif
     }

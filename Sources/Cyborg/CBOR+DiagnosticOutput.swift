@@ -104,7 +104,7 @@ extension CBOR: CustomStringConvertible {
         switch self {
         case .int(let value):
             return value.description
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         case .bigInt(data: let value):
             return value.description
 #endif

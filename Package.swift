@@ -37,7 +37,7 @@ let targets: [Target] = [
     ),
     .target(
         name: "Cyborg",
-        dependencies: ["CyborgBrain", "BigInt"],
+        dependencies: ["CyborgBrain", .product(name: "BigIntModule", package: "swift-numerics")],
         swiftSettings: [.define("MODULAR_DEVELOPMENT")]
     ),
     .target(
@@ -94,8 +94,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting.git",
                  branch: "master"),
-        .package(url: "https://github.com/dwaite/BigInt.git",
-                 branch: "master"),
+        .package(url: "https://github.com/apple/swift-numerics.git",
+                 branch: "biginteger"),
         .package(url: "https://github.com/apple/swift-nio.git",
                  branch: "main")
     ],

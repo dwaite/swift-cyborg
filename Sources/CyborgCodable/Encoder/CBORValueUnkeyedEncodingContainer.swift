@@ -18,8 +18,8 @@ import Foundation
 import Cyborg
 #endif
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer {
@@ -72,7 +72,7 @@ class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer 
     }
 
     func encode(_ value: UInt) throws {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state.append(.cbor(boxing.box(value)))
 #else
         try state.append(.cbor(boxing.box(value)))
@@ -92,7 +92,7 @@ class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer 
     }
 
     func encode(_ value: UInt64) throws {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state.append(.cbor(boxing.box(value)))
 #else
         try state.append(.cbor(boxing.box(value)))

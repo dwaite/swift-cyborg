@@ -14,8 +14,8 @@
 
 import Foundation
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 extension CBOR: ExpressibleByNilLiteral,
@@ -60,7 +60,7 @@ extension CBOR {
 }
 
 extension CBOR {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
     public init<BI>(_ source: BI) where BI: BinaryInteger {
         if let int = Int(exactly: source) {
             self = .int(int)

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 #if MODULAR_DEVELOPMENT
@@ -87,7 +87,7 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
 
     func encode(_ value: UInt) throws {
         assertFirstEncode()
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state = boxing.box(value)
 #else
         state = try boxing.box(value)
@@ -111,7 +111,7 @@ class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, Defer
 
     func encode(_ value: UInt64) throws {
         assertFirstEncode()
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         state = boxing.box(value)
 #else
         state = try boxing.box(value)

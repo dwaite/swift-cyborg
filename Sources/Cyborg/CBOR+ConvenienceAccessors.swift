@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import Foundation
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 public extension CBOR {
 
@@ -30,7 +30,7 @@ public extension CBOR {
                 return result
             }
             return nil
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         case .bigInt(let value):
             if let result = I(exactly: value) {
                 return result
@@ -96,7 +96,7 @@ public extension CBOR {
             return F(exactly: value)
         case .int(let value):
             return F(exactly: value)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         case .bigInt(let value):
             return F(exactly: value)
 #endif

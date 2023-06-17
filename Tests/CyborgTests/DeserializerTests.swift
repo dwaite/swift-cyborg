@@ -16,8 +16,8 @@ import Foundation
 import NIO
 import XCTest
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 @testable import Cyborg
@@ -46,7 +46,7 @@ public class DeserializerTests: XCTestCase {
         ])
 
         let deserializer = Deserializer()
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         let cbor = try deserializer.deserialize(from: &buffer)
 
         guard let array = cbor.arrayValue else {
@@ -73,7 +73,7 @@ public class DeserializerTests: XCTestCase {
     }
     public func testDeserializeNegativeIntegers() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 32)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         buffer.writeBytes([
             InitialByte(major: .array, info: AdditionalInfo(immediate: 6)).rawValue,
             0x20,               // -0x01 integer
@@ -108,7 +108,7 @@ public class DeserializerTests: XCTestCase {
         XCTAssert(array[2].intValue == -256)
         XCTAssert(array[3].intValue == -0x1235)
         XCTAssert(array[4].intValue == -0x01020305)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         // last value has to be a bigint because < Int.min
         XCTAssertNil(array[5].intValue)
         guard case .bigInt(let bigInt) = array[5] else {

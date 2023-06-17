@@ -19,8 +19,8 @@ import NIO
 import CyborgBrain
 #endif
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 import NIOFoundationCompat
@@ -40,7 +40,7 @@ public struct Deserializer {
             }
             return value
         case .negativeInteger(let data):
-#if canImport(BigInt)
+#if canImport(BigIntModule)
             let bigInt = ~BigInt(data.value)
             return CBOR.init(bigInt)
 #else

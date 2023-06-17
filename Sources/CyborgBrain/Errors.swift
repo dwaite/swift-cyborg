@@ -27,7 +27,7 @@ public enum WellFormednessError: Error {
 }
 
 public enum SerializationError: Error {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
     case bigIntTooLarge
 #endif
 }

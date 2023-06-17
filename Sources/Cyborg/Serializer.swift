@@ -19,8 +19,8 @@ import NIO
 import CyborgBrain
 #endif
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 extension DataItemHeader.SizedValue {
@@ -33,7 +33,7 @@ extension DataItemHeader.SizedValue {
 }
 
 extension DataItemHeader {
-#if canImport(BigInt)
+#if canImport(BigIntModule)
     init?(_ source: BigInt) {
         if source >= 0 {
             guard let dih = UInt64(exactly: source) else {
@@ -65,7 +65,7 @@ public struct Serializer {
         switch cbor {
         case .int(let value):
             DataItemHeader(value).write(into: &buffer)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         case .bigInt(let value):
             guard let dih = DataItemHeader(value) else {
                 throw SerializationError.bigIntTooLarge

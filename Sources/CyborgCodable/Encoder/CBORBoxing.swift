@@ -14,8 +14,8 @@
 
 import Foundation
 
-#if canImport(BigInt)
-import BigInt
+#if canImport(BigIntModule)
+import BigIntModule
 #endif
 
 #if MODULAR_DEVELOPMENT
@@ -28,7 +28,7 @@ struct CBORBoxing {
 
     var codingPath: [CodingKey]
 
-#if !canImport(BigInt)
+#if !canImport(BigIntModule)
     func integerConversionError(_ value: Any) -> Error {
         return EncodingError.invalidValue(value,
               EncodingError.Context(
@@ -89,7 +89,7 @@ struct CBORBoxing {
     func box(_ value: UInt32) -> CBOR {
         .int(Int(value))
     }
-    #elseif canImport(BigInt)
+    #elseif canImport(BigIntModule)
     func box(_ value: Int64) -> CBOR {
         if let value = Int(exactly: value) {
             return .int(value)
@@ -120,7 +120,7 @@ struct CBORBoxing {
     #endif
 
     // For UInt, UInt64, encoding depends on whether BigInt is available
-    #if canImport(BigInt)
+    #if canImport(BigIntModule)
 
     func box(_ value: UInt) -> CBOR  {
         if let value = Int(exactly: value) {
@@ -187,7 +187,7 @@ struct CBORBoxing {
             return box(value)
         case let value as Int:
             return box(value)
-#if canImport(BigInt)
+#if canImport(BigIntModule)
         case let value as UInt64:
             return box(value)
         case let value as UInt:
