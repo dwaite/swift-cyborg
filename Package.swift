@@ -85,10 +85,10 @@ let targets: [Target] = [
 let package = Package(
     name: "Cyborg",
     platforms: [
-        .iOS(.v10),
-        .tvOS(.v10),
-        .macOS(.v10_12),
-        .watchOS("99.0.0") // watchOS 6 cannot compile because no XCTest, no SPM support for conditional targets
+        .iOS(.v17),
+        .tvOS(.v17),
+        .macOS(.v14),
+        .watchOS(.v10) // watchOS 6 cannot compile because no XCTest, no SPM support for conditional targets
     ],
     products: products,
     dependencies: [

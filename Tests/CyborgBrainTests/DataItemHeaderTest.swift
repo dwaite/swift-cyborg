@@ -17,7 +17,10 @@
 import XCTest
 import Foundation
 import NIO
+
+#if canImport(CwlPreconditionTesting)
 import CwlPreconditionTesting
+#endif
 
 #if canImport(CyborgBrain)
 @testable import CyborgBrain
@@ -112,10 +115,12 @@ public class AdditionalInfoTests: XCTestCase {
 
     func testInitializeWithImmediate() {
         XCTAssert(AdditionalInfo(immediate: 23).rawValue == 23)
+        #if !canImport(CwlPreconditionTesting)
         let e = catchBadInstruction {
             _ = AdditionalInfo(immediate: 24)
         }
         XCTAssertNotNil(e)
+        #endif
     }
 
     func testInitializeWithImmediateValue() {
