@@ -23,7 +23,7 @@ import Cyborg
 #endif
 
 class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol, DeferredContainer {
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         boxing.codingPath
     }
 
@@ -32,7 +32,7 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
     let boxing: CBORBoxing
     var state: [CBOR: DeferrableCBOR]
 
-    func assertKeyNotPresent(forKey key: CodingKey) {
+    func assertKeyNotPresent(forKey key: any CodingKey) {
         assert(state[toCBORKey(key)] == nil,
                "value may only be set once per key on CBORKeyedEncodingContainer (duplicate = \"\(key)\"")
     }
@@ -144,14 +144,14 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
             return KeyedEncodingContainer(container)
     }
 
-    func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
+    func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
         assertKeyNotPresent(forKey: key)
         let container = CBORUnkeyedEncodingContainer(boxing: boxing.withSubKey(key))
         state[toCBORKey(key)] = .deferred(state: container)
         return container
     }
 
-    func superEncoder() -> Encoder {
+    func superEncoder() -> any Encoder {
         let key = CBORSuperKey()
         assertKeyNotPresent(forKey: key)
         let encoder = ActiveCBOREncoder(boxing: boxing, subKey: key)
@@ -159,7 +159,7 @@ class CBORKeyedEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol
         return encoder
     }
 
-    func superEncoder(forKey key: Key) -> Encoder {
+    func superEncoder(forKey key: Key) -> any Encoder {
         assertKeyNotPresent(forKey: key)
         let encoder = ActiveCBOREncoder(boxing: boxing, subKey: key)
         state[toCBORKey(key)] = .encoder(encoder)

@@ -21,7 +21,7 @@ import NIO
 // data - so a `CBOR` object encoded via `JSONEncoder` should result in base64-
 // encoded CBOR.
 extension CBOR: Codable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         let serializer = Serializer(deterministicObjectOrder: true)
         var buffer = ByteBufferAllocator().buffer(capacity: 64)
         try serializer.serialize(self, into: &buffer)
@@ -29,7 +29,7 @@ extension CBOR: Codable {
         try data.encode(to: encoder)
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let data = try decoder.singleValueContainer().decode(Data.self)
         var buffer = ByteBufferAllocator().buffer(capacity: data.count)
         buffer.writeBytes(data)

@@ -26,7 +26,7 @@ func toCBOR<Key>(_ key: Key) -> CBOR where Key: CodingKey {
 }
 
 enum CBORKeyedDecodingContainerError: Error {
-    case keyNotFound(key: CodingKey)
+    case keyNotFound(key: any CodingKey)
 }
 
 class CBORKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key: CodingKey {
@@ -39,7 +39,7 @@ class CBORKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key:
         self.unboxer = unboxer
     }
 
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         unboxer.codingPath
     }
 
@@ -185,7 +185,7 @@ class CBORKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key:
 
     }
 
-    func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+    func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
         guard let cbor = object[toCBOR(key)] else {
             throw CBORKeyedDecodingContainerError.keyNotFound(key: key)
         }
@@ -195,7 +195,7 @@ class CBORKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key:
         return CBORUnkeyedDecodingContainer(nestedArray, unboxer.withSubkey(key))
     }
 
-    func superDecoder() throws -> Decoder {
+    func superDecoder() throws -> any Decoder {
         let key = CBORSuperKey()
         guard let cbor = object[toCBOR(key)] else {
             throw CBORKeyedDecodingContainerError.keyNotFound(key: key)
@@ -203,7 +203,7 @@ class CBORKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key:
         return ActiveCBORDecoder(unboxer: unboxer.withSubkey(key), cbor: cbor)
     }
 
-    func superDecoder(forKey key: Key) throws -> Decoder {
+    func superDecoder(forKey key: Key) throws -> any Decoder {
         guard let cbor = object[toCBOR(key)] else {
             throw CBORKeyedDecodingContainerError.keyNotFound(key: key)
         }

@@ -26,7 +26,7 @@ class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer 
 
     var state: [DeferrableCBOR]
     var boxing: CBORBoxing
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         boxing.codingPath
     }
 
@@ -120,13 +120,13 @@ class CBORUnkeyedEncodingContainer: UnkeyedEncodingContainer, DeferredContainer 
             return KeyedEncodingContainer(container)
     }
 
-    func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+    func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
         let container = CBORUnkeyedEncodingContainer(boxing: boxing.withSubKey(ArrayIndex(intValue: state.count)))
         state.append(.deferred(state: container))
         return container
     }
 
-    func superEncoder() -> Encoder {
+    func superEncoder() -> any Encoder {
         let encoder = ActiveCBOREncoder(boxing: boxing, subKey: ArrayIndex(intValue: state.count))
         state.append(.encoder(encoder))
         return encoder

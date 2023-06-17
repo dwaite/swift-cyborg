@@ -57,7 +57,7 @@ struct ActiveCBORDecoder: Decoder {
         self.unboxer = unboxer
         self.cbor = cbor
     }
-    var codingPath: [CodingKey] { unboxer.codingPath }
+    var codingPath: [any CodingKey] { unboxer.codingPath }
     var userInfo: [CodingUserInfoKey: Any] { unboxer.userInfo }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
@@ -68,14 +68,14 @@ struct ActiveCBORDecoder: Decoder {
         return KeyedDecodingContainer(CBORKeyedDecodingContainer<Key>(object, unboxer))
     }
 
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         guard case .array(let array) = cbor else {
             throw CBORDecoderError.notUnkeyedContainer
         }
         return CBORUnkeyedDecodingContainer(array, unboxer)
     }
 
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
         CBORSingleValueDecodingContainer(cbor, unboxer)
     }
 

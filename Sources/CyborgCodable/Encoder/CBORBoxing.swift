@@ -26,7 +26,7 @@ struct CBORBoxing {
     var userInfo: [CodingUserInfoKey: Any] = [:]
     var dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970
 
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
 
 #if !canImport(BigIntModule)
     func integerConversionError(_ value: Any) -> Error {
@@ -158,7 +158,7 @@ struct CBORBoxing {
         .null
     }
 
-    func boxEncodable(_ value: Encodable) throws -> CBOR {
+    func boxEncodable(_ value: any Encodable) throws -> CBOR {
         let encoder = ActiveCBOREncoder(boxing: self)
         try value.encode(to: encoder)
         return encoder.finalize()
@@ -173,7 +173,7 @@ struct CBORBoxing {
     }
 
     // swiftlint:disable:next cyclomatic_complexity function_body_length
-    func box(_ value: Encodable) throws -> CBOR {
+    func box(_ value: any Encodable) throws -> CBOR {
         switch value {
         case let value as Int8:
             return box(value)
@@ -239,7 +239,7 @@ struct CBORBoxing {
         }
     }
 
-    func withSubKey(_ subKey: CodingKey) -> Self {
+    func withSubKey(_ subKey: any CodingKey) -> Self {
         var innerBox = self
         innerBox.codingPath += [subKey]
         return innerBox

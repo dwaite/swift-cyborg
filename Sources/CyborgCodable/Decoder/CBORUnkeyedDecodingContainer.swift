@@ -32,7 +32,7 @@ struct CBORUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         self.unboxer = unboxer
     }
 
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         unboxer.codingPath
     }
 
@@ -132,7 +132,7 @@ struct CBORUnkeyedDecodingContainer: UnkeyedDecodingContainer {
 
     }
 
-    mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+    mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
         let cbor = try pop()
 
         guard let nestedArray = cbor.arrayValue else {
@@ -141,7 +141,7 @@ struct CBORUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         return CBORUnkeyedDecodingContainer(nestedArray, unboxer.withSubkey(ArrayIndex(intValue: currentIndex)))
     }
 
-    mutating func superDecoder() throws -> Decoder {
+    mutating func superDecoder() throws -> any Decoder {
         let cbor = try pop()
         return ActiveCBORDecoder(unboxer: unboxer.withSubkey(ArrayIndex(intValue: currentIndex)), cbor: cbor)
     }

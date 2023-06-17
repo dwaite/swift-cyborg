@@ -27,7 +27,7 @@ struct CBORSingleValueDecodingContainer: SingleValueDecodingContainer {
         self.unboxer = unboxer
     }
 
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         unboxer.codingPath
     }
 

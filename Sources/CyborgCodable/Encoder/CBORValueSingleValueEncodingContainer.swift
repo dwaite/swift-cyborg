@@ -21,7 +21,7 @@ import Cyborg
 #endif
 
 class CBORValueSingleValueEncodingContainer: SingleValueEncodingContainer, DeferredContainer {
-    var codingPath: [CodingKey] {
+    var codingPath: [any CodingKey] {
         boxing.codingPath
     }
 

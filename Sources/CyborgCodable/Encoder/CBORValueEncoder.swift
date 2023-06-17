@@ -49,8 +49,8 @@ public struct CBORValueEncoder {
     }
 }
 
-func toCBORKey(_ key: CodingKey) -> CBOR {
-    if let key = key as? CBORCodingKey {
+func toCBORKey(_ key: any CodingKey) -> CBOR {
+    if let key = key as? any CBORCodingKey {
         return key.cborValue
     }
     if let intValue = key.intValue {
@@ -68,16 +68,16 @@ protocol DeferredContainer {
 
 enum DeferrableCBOR {
     case cbor(CBOR)
-    indirect case deferred(state: DeferredContainer)
+    indirect case deferred(state: any DeferredContainer)
     indirect case encoder(ActiveCBOREncoder)
 }
 
 public class ActiveCBOREncoder: Encoder {
     var boxing: CBORBoxing
 
-    var vendedContainer: DeferredContainer?
+    var vendedContainer: (any DeferredContainer)?
 
-    public var codingPath: [CodingKey] {
+    public var codingPath: [any CodingKey] {
         boxing.codingPath
     }
     public var userInfo: [CodingUserInfoKey: Any] {
@@ -88,7 +88,7 @@ public class ActiveCBOREncoder: Encoder {
         self.boxing = boxing
     }
 
-    init(boxing: CBORBoxing, subKey: CodingKey) {
+    init(boxing: CBORBoxing, subKey: any CodingKey) {
         self.boxing = boxing
         self.boxing.codingPath += [subKey]
     }
@@ -106,14 +106,14 @@ public class ActiveCBOREncoder: Encoder {
         return KeyedEncodingContainer(keyed)
     }
 
-    public func singleValueContainer() -> SingleValueEncodingContainer {
+    public func singleValueContainer() -> any SingleValueEncodingContainer {
         enforceOneUse()
         let single = CBORValueSingleValueEncodingContainer(boxing: boxing)
         vendedContainer = single
         return single
     }
 
-    public func unkeyedContainer() -> UnkeyedEncodingContainer {
+    public func unkeyedContainer() -> any UnkeyedEncodingContainer {
         enforceOneUse()
         let unkeyed = CBORUnkeyedEncodingContainer(boxing: boxing)
         vendedContainer = unkeyed

@@ -29,36 +29,40 @@ let products: [Product] = [
             targets: ["CyborgBrain", "Cyborg", "CyborgCodable"])
 ]
 
+let swiftSettings:[SwiftSetting] = [
+    .define("MODULAR_DEVELOPMENT"),
+    .enableUpcomingFeature("ExistentialAny")
+]
 let targets: [Target] = [
     .target(
         name: "CyborgBrain",
         dependencies: [.product(name: "NIO", package: "swift-nio"), .product(name: "NIOFoundationCompat", package: "swift-nio")],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     ),
     .target(
         name: "Cyborg",
         dependencies: ["CyborgBrain", .product(name: "BigIntModule", package: "swift-numerics")],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     ),
     .target(
         name: "CyborgCodable",
         dependencies: ["Cyborg"],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     ),
     .testTarget(
         name: "CyborgBrainTests",
         dependencies: ["CyborgBrain", "CwlPreconditionTesting"],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     ),
     .testTarget(
         name: "CyborgTests",
         dependencies: ["Cyborg"],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     ),
     .testTarget(
         name: "CyborgCodableTests",
         dependencies: ["CyborgCodable"],
-        swiftSettings: [.define("MODULAR_DEVELOPMENT")]
+        swiftSettings: swiftSettings
     )
 ]
 #else

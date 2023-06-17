@@ -49,7 +49,7 @@ public enum DateDecodingStrategy {
     case formatted(DateFormatter)
 
     /// Encode the `Date` as a custom value encoded by the given closure.
-    case custom(_ customFunction: (_:Decoder) throws -> Date)
+    case custom(_ customFunction: (_: any Decoder) throws -> Date)
 
     func decode(_ cbor: CBOR, _ decoder: () -> ActiveCBORDecoder) throws -> Date {
         switch self {

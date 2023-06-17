@@ -23,7 +23,7 @@ enum CBORUnboxingError: Error {
     case incorrectlyFormattedURL
 }
 struct CBORUnboxer {
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
     var userInfo: [CodingUserInfoKey: Any]
     var dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
 
@@ -32,7 +32,7 @@ struct CBORUnboxer {
         userInfo = [:]
     }
 
-    func withSubkey(_ subkey: CodingKey) -> Self {
+    func withSubkey(_ subkey: any CodingKey) -> Self {
         var state = self
         state.codingPath += [subkey]
         return state
