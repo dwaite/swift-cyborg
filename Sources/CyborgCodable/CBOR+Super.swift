@@ -7,6 +7,10 @@
 
 import Foundation
 
+#if MODULAR_DEVELOPMENT
+import Cyborg
+#endif
+
 internal extension CBOR {
     static let `super` = Self.simple(value: 0xA7) // Latin-1 §, may change however if standardized
 }

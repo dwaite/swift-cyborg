@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.9
 
 // Copyright © 2019 David Waite
 //
@@ -22,7 +22,7 @@ import PackageDescription
 // - a combined mode that creates a single module. This is what should be
 //   checked into GitHub for use
 
-#if false // MODULAR_DEVELOPMENT
+#if true // MODULAR_DEVELOPMENT
 let products: [Product] = [
     .library(
             name: "Cyborg",
@@ -32,7 +32,7 @@ let products: [Product] = [
 let targets: [Target] = [
     .target(
         name: "CyborgBrain",
-        dependencies: ["NIO", "NIOFoundationCompat"],
+        dependencies: [.product(name: "NIO", package: "swift-nio"), .product(name: "NIOFoundationCompat", package: "swift-nio")],
         swiftSettings: [.define("MODULAR_DEVELOPMENT")]
     ),
     .target(
@@ -71,7 +71,7 @@ let products: [Product] = [
 let targets: [Target] = [
     .target(
         name: "Cyborg",
-        dependencies: ["NIO", "NIOFoundationCompat", "BigInt"],
+        dependencies: ["BigInt"],
         path: "Sources"
     ),
     .testTarget(
@@ -92,9 +92,12 @@ let package = Package(
     ],
     products: products,
     dependencies: [
-        .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting", .branch("master")),
-        .package(url: "https://github.com/dwaite/BigInt", .branch("master")),
-        .package(url: "https://github.com/apple/swift-nio", .branch("master"))
+        .package(url: "https://github.com/mattgallagher/CwlPreconditionTesting.git",
+                 branch: "master"),
+        .package(url: "https://github.com/dwaite/BigInt.git",
+                 branch: "master"),
+        .package(url: "https://github.com/apple/swift-nio.git",
+                 branch: "main")
     ],
     targets: targets,
     swiftLanguageVersions: [.v5]

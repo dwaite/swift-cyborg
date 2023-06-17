@@ -7,6 +7,11 @@
 
 import Foundation
 
+#if MODULAR_DEVELOPMENT
+import Cyborg
+#endif
+
+
 public protocol CBORCodingKey: CodingKey {
 
     /// The value to use in an CBOR-indexed collection (e.g. a CBOR object).
