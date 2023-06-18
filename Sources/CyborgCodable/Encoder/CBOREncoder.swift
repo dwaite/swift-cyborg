@@ -68,7 +68,6 @@ public struct CBOREncoder {
     }
 }
 
-
 #if canImport(Combine)
 import Combine
 

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//swiftlint:disable identifier_name
-
 import XCTest
 import Foundation
 import NIO
@@ -37,124 +35,124 @@ typealias SizedValue     = DataItemHeader.SizedValue
 
 public class ImmediateValueTests: XCTestCase {
     func testInitialize() {
-        let iv = ImmediateValue(rawValue: 0)
-        XCTAssertNotNil(iv)
-        XCTAssert(iv!.rawValue == 0)
+        let immediate = ImmediateValue(rawValue: 0)
+        XCTAssertNotNil(immediate)
+        XCTAssert(immediate!.rawValue == 0)
     }
 
     func testInitializeTooLarge() {
-        let iv = ImmediateValue(rawValue: 24)
-        XCTAssertNil(iv)
+        let immediate = ImmediateValue(rawValue: 24)
+        XCTAssertNil(immediate)
     }
 
     func testInitializeWithAdditionalInfo() {
-        let ai = AdditionalInfo(rawValue: 4)
-        XCTAssertNotNil(ai)
-        let iv = ImmediateValue.init(ai!)
-        XCTAssertNotNil(iv)
-        XCTAssert(iv!.rawValue == 4)
+        let info = AdditionalInfo(rawValue: 4)
+        XCTAssertNotNil(info)
+        let immediate = ImmediateValue.init(info!)
+        XCTAssertNotNil(immediate)
+        XCTAssert(immediate!.rawValue == 4)
     }
 
     func testInitializeWithNotImmediateAdditionalInfo() {
-        let ai = AdditionalInfo(rawValue: 0x18)
-        XCTAssertNotNil(ai)
-        let iv = ImmediateValue.init(ai!)
-        XCTAssertNil(iv)
+        let info = AdditionalInfo(rawValue: 0x18)
+        XCTAssertNotNil(info)
+        let immediate = ImmediateValue.init(info!)
+        XCTAssertNil(immediate)
     }
 }
 
 public class AdditionalInfoTests: XCTestCase {
     func testInitializeWithRawValue() {
-        var ai = AdditionalInfo(rawValue: 0)
-        XCTAssertNotNil(ai)
-        XCTAssert(ai!.immediateValue == 0)
+        var info = AdditionalInfo(rawValue: 0)
+        XCTAssertNotNil(info)
+        XCTAssert(info!.immediateValue == 0)
 
-        ai = AdditionalInfo(rawValue: 23)
-        XCTAssertNotNil(ai)
-        XCTAssert(ai!.immediateValue == 23)
+        info = AdditionalInfo(rawValue: 23)
+        XCTAssertNotNil(info)
+        XCTAssert(info!.immediateValue == 23)
 
-        ai = AdditionalInfo(rawValue: 24)
-        XCTAssertNotNil(ai)
-        XCTAssertNil(ai!.immediateValue)
-        XCTAssert(ai! == .uint8Following)
+        info = AdditionalInfo(rawValue: 24)
+        XCTAssertNotNil(info)
+        XCTAssertNil(info!.immediateValue)
+        XCTAssert(info! == .uint8Following)
 
-        ai = AdditionalInfo(rawValue: 25)
-        XCTAssertNotNil(ai)
-        XCTAssertNil(ai!.immediateValue)
-        XCTAssert(ai! == .uint16Following)
+        info = AdditionalInfo(rawValue: 25)
+        XCTAssertNotNil(info)
+        XCTAssertNil(info!.immediateValue)
+        XCTAssert(info! == .uint16Following)
 
-        ai = AdditionalInfo(rawValue: 26)
-        XCTAssertNotNil(ai)
-        XCTAssertNil(ai!.immediateValue)
-        XCTAssert(ai! == .uint32Following)
+        info = AdditionalInfo(rawValue: 26)
+        XCTAssertNotNil(info)
+        XCTAssertNil(info!.immediateValue)
+        XCTAssert(info! == .uint32Following)
 
-        ai = AdditionalInfo(rawValue: 27)
-        XCTAssertNotNil(ai)
-        XCTAssertNil(ai!.immediateValue)
-        XCTAssert(ai! == .uint64Following)
+        info = AdditionalInfo(rawValue: 27)
+        XCTAssertNotNil(info)
+        XCTAssertNil(info!.immediateValue)
+        XCTAssert(info! == .uint64Following)
 
         // indefinite value
-        ai = AdditionalInfo(rawValue: 31)
-        XCTAssertNil(ai)
+        info = AdditionalInfo(rawValue: 31)
+        XCTAssertNil(info)
 
         // reserved value
-        ai = AdditionalInfo(rawValue: 28)
-        XCTAssertNil(ai)
+        info = AdditionalInfo(rawValue: 28)
+        XCTAssertNil(info)
 
         // illegal value
-        ai = AdditionalInfo(rawValue: 255)
-        XCTAssertNil(ai)
+        info = AdditionalInfo(rawValue: 255)
+        XCTAssertNil(info)
 
     }
 
     func testInitializeWithIB() {
-        let ai = AdditionalInfo(initialByte: 0xe1)
-        XCTAssertNotNil(ai)
-        XCTAssert(ai!.immediateValue == 1)
+        let info = AdditionalInfo(initialByte: 0xe1)
+        XCTAssertNotNil(info)
+        XCTAssert(info!.immediateValue == 1)
     }
 
     func testInitializeWithImmediate() {
         XCTAssert(AdditionalInfo(immediate: 23).rawValue == 23)
-        #if !canImport(CwlPreconditionTesting)
-        let e = catchBadInstruction {
+        #if canImport(CwlPreconditionTesting)
+        let signal = catchBadInstruction {
             _ = AdditionalInfo(immediate: 24)
         }
-        XCTAssertNotNil(e)
+        XCTAssertNotNil(signal)
         #endif
     }
 
     func testInitializeWithImmediateValue() {
-        let iv = ImmediateValue(rawValue: 23)
-        XCTAssertNotNil(iv)
-        let ai = AdditionalInfo(iv!)
-        XCTAssert(ai.immediateValue == 23)
+        let immediate = ImmediateValue(rawValue: 23)
+        XCTAssertNotNil(immediate)
+        let info = AdditionalInfo(immediate!)
+        XCTAssert(info.immediateValue == 23)
     }
 }
 
 public class SimpleValueTests: XCTestCase {
     func testInitializeWithImmediateValue() {
-        let sv = SimpleValue(ImmediateValue(rawValue: 10)!)
-        XCTAssert(sv.rawValue == 10)
+        let simple = SimpleValue(ImmediateValue(rawValue: 10)!)
+        XCTAssert(simple.rawValue == 10)
     }
     func testInitializeWithRawValue() {
-        var sv = SimpleValue(rawValue: 11)
-        XCTAssert(sv != nil)
-        XCTAssert(sv!.rawValue == 11)
+        var simple = SimpleValue(rawValue: 11)
+        XCTAssert(simple != nil)
+        XCTAssert(simple!.rawValue == 11)
 
-        sv = SimpleValue(rawValue: 24)
-        XCTAssertNil(sv)
+        simple = SimpleValue(rawValue: 24)
+        XCTAssertNil(simple)
 
-        sv = SimpleValue(rawValue: 31)
-        XCTAssertNil(sv)
+        simple = SimpleValue(rawValue: 31)
+        XCTAssertNil(simple)
 
-        sv = SimpleValue(rawValue: 32)
-        XCTAssertNotNil(sv)
+        simple = SimpleValue(rawValue: 32)
+        XCTAssertNotNil(simple)
     }
 
     func testWrite() {
         var buffer = ByteBufferAllocator().buffer(capacity: 1)
-        let sv = SimpleValue(rawValue: 10)!
-        sv.write(into: &buffer)
+        let simple = SimpleValue(rawValue: 10)!
+        simple.write(into: &buffer)
         XCTAssert(buffer.readInteger() == 0xea as UInt8)
 
         let sv2 = SimpleValue(rawValue: 64)!
@@ -229,10 +227,12 @@ public class SizedValueTests: XCTestCase {
             self.sv64 = try SizedValue(info: .uint64Following, from: &buffer)
         }() )
     }
+
     func testInitializeViaLiteral() {
-        let sv: SizedValue = 0
-        XCTAssert(sv == .immediate(ImmediateValue(rawValue: 0)!))
+        let sized: SizedValue = 0
+        XCTAssert(sized == .immediate(ImmediateValue(rawValue: 0)!))
     }
+
     func testInitializeWithBuffer() throws {
         XCTAssert(svi  == .immediate(ImmediateValue(rawValue: 0x10)!))
         XCTAssert(sv8  == .uint8(0xff))

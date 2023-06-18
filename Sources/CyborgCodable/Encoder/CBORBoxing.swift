@@ -122,7 +122,7 @@ struct CBORBoxing {
     // For UInt, UInt64, encoding depends on whether BigInt is available
     #if canImport(BigIntModule)
 
-    func box(_ value: UInt) -> CBOR  {
+    func box(_ value: UInt) -> CBOR {
         if let value = Int(exactly: value) {
             return .int(value)
         }
@@ -138,14 +138,14 @@ struct CBORBoxing {
 
     #else
 
-    func box(_ value: UInt) throws  -> CBOR {
+    func box(_ value: UInt) throws -> CBOR {
         if let value = Int(exactly: value) {
             return .int(value)
         }
         throw integerConversionError(value)
     }
 
-    func box(_ value: UInt64) throws  -> CBOR {
+    func box(_ value: UInt64) throws -> CBOR {
         if let value = Int(exactly: value) {
             return .int(value)
         }
@@ -172,7 +172,7 @@ struct CBORBoxing {
         .data(data)
     }
 
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    // swiftlint:disable:next function_body_length
     func box(_ value: any Encodable) throws -> CBOR {
         switch value {
         case let value as Int8:

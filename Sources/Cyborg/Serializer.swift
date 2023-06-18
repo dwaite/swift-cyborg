@@ -60,7 +60,51 @@ public struct Serializer {
         self.deterministicObjectOrder = deterministicObjectOrder
     }
 
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    private func serializeObject(_ object: [CBOR: CBOR], into buffer: inout ByteBuffer) throws {
+        DataItemHeader.object(pairs: SizedValue(object.count)).write(into: &buffer)
+        if !deterministicObjectOrder {
+            // output keys in dictionary order, which will be inconsistent
+            // across runs
+            for (key, value) in object {
+                try serialize(key, into: &buffer)
+                try serialize(value, into: &buffer)
+            }
+        } else {
+            // output keys in lexigographic order.
+
+            // we do this by:
+            // 1. writing the values while capturing the data (as views)
+            // 2. sorting those views lexigogaphically
+            // 3. create a new ByteBuffer the size of the written data
+            // 4. write the sorted keys and values
+            // 5. overwrite the values written in step 1 with the new buffer
+            let writerStartIndex = buffer.writerIndex
+            let kvs: [(ByteBufferView, ByteBufferView)] = try object.map { key, value in
+                let keyIndex = buffer.writerIndex
+                try serialize(key, into: &buffer)
+                let valueIndex = buffer.writerIndex
+                try serialize(value, into: &buffer)
+
+                return (
+                    keyView: buffer.viewBytes(
+                        at: keyIndex,
+                        length: valueIndex - keyIndex)!,
+                    valueView: buffer.viewBytes(
+                        at: valueIndex,
+                        length: buffer.writerIndex - valueIndex)!
+                )
+            }.sorted {
+                $0.0.lexicographicallyPrecedes($1.0)
+            }
+            var tempBuffer = ByteBufferAllocator().buffer(capacity: buffer.writerIndex - writerStartIndex)
+            for (keyView, valueView) in kvs {
+                tempBuffer.writeBytes(keyView)
+                tempBuffer.writeBytes(valueView)
+            }
+            buffer.moveWriterIndex(to: writerStartIndex)
+            buffer.writeBuffer(&tempBuffer)
+        }
+    }
     public func serialize(_ cbor: CBOR, into buffer: inout ByteBuffer) throws {
         switch cbor {
         case .int(let value):
@@ -85,49 +129,7 @@ public struct Serializer {
                 try serialize(item, into: &buffer)
             }
         case .object(let object):
-            DataItemHeader.object(pairs: SizedValue(object.count)).write(into: &buffer)
-            if !deterministicObjectOrder {
-                // output keys in dictionary order, which will be inconsistent
-                // across runs
-                for (key, value) in object {
-                    try serialize(key, into: &buffer)
-                    try serialize(value, into: &buffer)
-                }
-            } else {
-                // output keys in lexigographic order.
-
-                // we do this by:
-                // 1. writing the values while capturing the data (as views)
-                // 2. sorting those views lexigogaphically
-                // 3. create a new ByteBuffer the size of the written data
-                // 4. write the sorted keys and values
-                // 5. overwrite the values written in step 1 with the new buffer
-                let writerStartIndex = buffer.writerIndex
-                let kvs: [(ByteBufferView, ByteBufferView)] = try object.map { key, value in
-                    let keyIndex = buffer.writerIndex
-                    try serialize(key, into: &buffer)
-                    let valueIndex = buffer.writerIndex
-                    try serialize(value, into: &buffer)
-
-                    return (
-                        keyView: buffer.viewBytes(
-                            at: keyIndex,
-                            length: valueIndex - keyIndex)!,
-                        valueView: buffer.viewBytes(
-                            at: valueIndex,
-                            length: buffer.writerIndex - valueIndex)!
-                    )
-                }.sorted {
-                    $0.0.lexicographicallyPrecedes($1.0)
-                }
-                var tempBuffer = ByteBufferAllocator().buffer(capacity: buffer.writerIndex - writerStartIndex)
-                for (keyView, valueView) in kvs {
-                    tempBuffer.writeBytes(keyView)
-                    tempBuffer.writeBytes(valueView)
-                }
-                buffer.moveWriterIndex(to: writerStartIndex)
-                buffer.writeBuffer(&tempBuffer)
-            }
+            try serializeObject(object, into: &buffer)
         case .tagged(let tag, let value):
             DataItemHeader.tag(id: SizedValue(tag.rawValue)).write(into: &buffer)
             try serialize(value, into: &buffer)

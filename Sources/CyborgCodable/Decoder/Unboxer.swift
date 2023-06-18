@@ -170,4 +170,6 @@ struct CBORUnboxer {
             return try type.init(from: decoder)
         }
     }
+    // swiftlint:enable force_cast
+
 }

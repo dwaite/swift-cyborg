@@ -41,7 +41,7 @@ public enum DateEncodingStrategy {
     case formatted(DateFormatter)
 
     /// Encode the `Date` as a custom value encoded by the given closure.
-    case custom(_ encodingFunction: (_:Date, _:any Encoder) throws -> Void)
+    case custom(_ encodingFunction: (_: Date, _: any Encoder) throws -> Void)
 
     func encode(_ date: Date, _ encoder: () -> ActiveCBOREncoder) throws -> CBOR {
         switch self {

@@ -33,26 +33,32 @@ let swiftSettings:[SwiftSetting] = [
     .define("MODULAR_DEVELOPMENT"),
     .enableUpcomingFeature("ExistentialAny")
 ]
+let plugins = [Target.PluginUsage.plugin(name: "SwiftLintPlugin", package: "SwiftLint")]
+
 let targets: [Target] = [
     .target(
         name: "CyborgBrain",
         dependencies: [.product(name: "NIO", package: "swift-nio"), .product(name: "NIOFoundationCompat", package: "swift-nio")],
-        swiftSettings: swiftSettings
+        swiftSettings: swiftSettings,
+        plugins: plugins
     ),
     .target(
         name: "Cyborg",
         dependencies: ["CyborgBrain", .product(name: "BigIntModule", package: "swift-numerics")],
-        swiftSettings: swiftSettings
+        swiftSettings: swiftSettings,
+        plugins: plugins
     ),
     .target(
         name: "CyborgCodable",
         dependencies: ["Cyborg"],
-        swiftSettings: swiftSettings
+        swiftSettings: swiftSettings,
+        plugins: plugins
     ),
     .testTarget(
         name: "CyborgBrainTests",
         dependencies: ["CyborgBrain", "CwlPreconditionTesting"],
-        swiftSettings: swiftSettings
+        swiftSettings: swiftSettings,
+        plugins: plugins
     ),
     .testTarget(
         name: "CyborgTests",
@@ -101,6 +107,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-numerics.git",
                  branch: "biginteger"),
         .package(url: "https://github.com/apple/swift-nio.git",
+                 branch: "main"),
+        .package(url: "https://github.com/realm/SwiftLint.git",
                  branch: "main")
     ],
     targets: targets,

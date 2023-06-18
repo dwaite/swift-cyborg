@@ -99,7 +99,45 @@ extension CBOR: CustomStringConvertible {
         0x22: "\\\""
     ]
 
-    //swiftlint:disable:next cyclomatic_complexity function_body_length
+    private func diagnosticValue(_ value: Double) -> String {
+        if value.isFinite {
+            return value.description
+        }
+        if value == Double.infinity {
+            return "Infinity"
+        }
+        if value == -Double.infinity {
+            return "-Infinity"
+        }
+        return "NaN"
+    }
+
+    private func diagnosticValue(_ value: [CBOR: CBOR]) -> String {
+        let joined = value.map { key, value in
+                return "\(key):\(value)"
+        }
+        .joined(separator: ",")
+        return "{\(joined)}"
+    }
+
+    private func diagnosticValue(_ value: String) -> String {
+        var view = value.unicodeScalars
+        view.indices.reversed().forEach { index in
+            let scalar = view[index]
+            if let escapedValue = CBOR.jsonStringEscapeDictionary[Int(scalar.value)] {
+                let after = view.index(after: index)
+                let range = index..<after
+                view.replaceSubrange(range, with: escapedValue.unicodeScalars)
+            }
+            if scalar.utf16.count > 1 {
+                let escapedValue = scalar.utf16.map { String(format: "\\u%04X", $0) }.joined()
+                let after = view.index(after: index)
+                let range = index..<after
+                view.replaceSubrange(range, with: escapedValue.unicodeScalars)
+            }
+        }
+        return "\"\(String(view))\""
+    }
     public func diagnosticString(_ options: DiagnosticBinaryEncoding = .uppercaseHexadecimal) -> String {
         switch self {
         case .int(let value):
@@ -117,16 +155,7 @@ extension CBOR: CustomStringConvertible {
         case .undefined:
             return "undefined"
         case .double(let value):
-            if value.isFinite {
-                return value.description
-            }
-            if value == Double.infinity {
-                return "Infinity"
-            }
-            if value == -Double.infinity {
-                return "-Infinity"
-            }
-            return "NaN"
+            return diagnosticValue(value)
         case .tagged(let tag, let value):
             return "\(tag.rawValue)(\(value))"
         case .data(let value):
@@ -136,27 +165,9 @@ extension CBOR: CustomStringConvertible {
         case .array(let value):
             return "[\(value.map({$0.description}).joined(separator: ","))]"
         case .object(let value):
-            let joined = value.map { key, value in
-                return "\(key):\(value)"
-                }.joined(separator: ",")
-            return "{\(joined)}"
+            return diagnosticValue(value)
         case .string(let value):
-            var view = value.unicodeScalars
-            view.indices.reversed().forEach { index in
-                let scalar = view[index]
-                if let escapedValue = CBOR.jsonStringEscapeDictionary[Int(scalar.value)] {
-                    let after = view.index(after: index)
-                    let range = index..<after
-                    view.replaceSubrange(range, with: escapedValue.unicodeScalars)
-                }
-                if scalar.utf16.count > 1 {
-                    let escapedValue = scalar.utf16.map { String(format: "\\u%04X", $0) }.joined()
-                    let after = view.index(after: index)
-                    let range = index..<after
-                    view.replaceSubrange(range, with: escapedValue.unicodeScalars)
-                }
-            }
-            return "\"\(String(view))\""
+            return diagnosticValue(value)
         }
     }
 

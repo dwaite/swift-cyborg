@@ -19,7 +19,6 @@ import NIO
 /// The enumeration is structured roughly in line with the major types, with specialty data types to preserve the
 /// different encodings, without necessarily normalizing them. In the case of `SimpleValue` and `ImmediateValue`,
 /// the types also enforce legal values to prevent inconsistencies in tooling
-//swiftlint:disable:next type_body_length
 public enum DataItemHeader: Hashable {
     case unsignedInteger(SizedValue)
     case negativeInteger(data: SizedValue)
@@ -27,12 +26,143 @@ public enum DataItemHeader: Hashable {
     case utf8TextString(length: SizedValue?)
     case array(count: SizedValue?)
     case object(pairs: SizedValue?)
-    // swiftlint:disable:next identifier_name
     case tag(id: SizedValue)
     case simple(SimpleValue)
     case floatingPoint(FloatValue)
     case `break`
 
+    public init(from buffer: inout ByteBuffer) throws {
+        guard let initialByte: UInt8 = buffer.readInteger() else {
+            throw DeserializationError.endOfStream(offset: buffer.readerIndex)
+        }
+
+        let majorType = MajorType(initialByte: initialByte)
+        let additionalInfo = AdditionalInfo(initialByte: initialByte)
+        switch (majorType, additionalInfo) {
+        case (.unsignedInteger, let info?):
+            self = .unsignedInteger(try SizedValue(info: info, from: &buffer))
+        case (.negativeInteger, let info?):
+            self = .negativeInteger(data: try SizedValue(info: info, from: &buffer))
+        case (.byteString, let info):
+            self = .byteString(length: try info.map { try SizedValue(info: $0, from: &buffer) })
+        case (.utf8TextString, let info):
+            self = .utf8TextString(length: try info.map { try SizedValue(info: $0, from: &buffer) })
+        case (.array, let info):
+            self = .array(count: try info.map { try SizedValue(info: $0, from: &buffer) })
+        case (.object, let info):
+            self = .object(pairs: try info.map { try SizedValue(info: $0, from: &buffer) })
+        case (.tag, let info?):
+            self = .tag(id: try SizedValue(info: info, from: &buffer))
+        case (.etc, let info):
+            self = try .cborFromEtc(info, from: &buffer)
+        default:
+            throw WellFormednessError.unknownInitialByte(initialByte: initialByte, offset: buffer.readerIndex)
+        }
+    }
+
+    private static func cborFromEtc(_ additionalInfo: AdditionalInfo?, from buffer: inout ByteBuffer) throws ->
+        DataItemHeader {
+        guard let additionalInfo = additionalInfo else {
+            return .break
+        }
+        let sizedValue = try SizedValue(info: additionalInfo, from: &buffer)
+        switch sizedValue {
+        case .immediate(let value):
+            return .simple(SimpleValue(value))
+        case .uint8(let value):
+            guard let simpleValue = SimpleValue(rawValue: value) else {
+                throw WellFormednessError.invalidSimpleValue(value: value, offset: buffer.readerIndex)
+            }
+            return .simple(simpleValue)
+        case .uint16(let value):
+            return .floatingPoint(.half(value))
+        case .uint32(let value):
+            return .floatingPoint(.float(Float(bitPattern: value)))
+        case .uint64(let value):
+            return .floatingPoint(.double(Double(bitPattern: value)))
+        }
+    }
+
+    public var isCompleteDataItem: Bool {
+        switch self {
+        case .negativeInteger, .unsignedInteger, .simple, .floatingPoint:
+            return true
+        case .array(let sizedValue?),
+             .byteString(let sizedValue?),
+             .object(let sizedValue?),
+             .utf8TextString(let sizedValue?):
+            return sizedValue.value == 0
+        case .break, .tag:
+            return false
+        default:
+            return false
+        }
+    }
+
+    public static let `false`         = Self.simple(SimpleValue(rawValue: 0x14)!)
+    public static let `true`          = Self.simple(SimpleValue(rawValue: 0x15)!)
+    public static let null            = Self.simple(SimpleValue(rawValue: 0x16)!)
+    public static let undefined       = Self.simple(SimpleValue(rawValue: 0x17)!)
+
+    private func writeSV(_ sizedValue: SizedValue?, _ majorType: MajorType, into buffer: inout ByteBuffer) {
+        guard let sizedValue = sizedValue else {
+            buffer.writeInteger(majorType.rawValue | 0x1f)
+            return
+        }
+        sizedValue.write(majorType, into: &buffer)
+    }
+
+    public func write(into buffer: inout ByteBuffer) {
+        switch self {
+        case .unsignedInteger(let sizedValue):
+            sizedValue.write(.unsignedInteger, into: &buffer)
+        case .negativeInteger(let sizedValue):
+            sizedValue.write(.negativeInteger, into: &buffer)
+        case .byteString(let sizedValue):
+            writeSV(sizedValue, .byteString, into: &buffer)
+        case .utf8TextString(let sizedValue):
+            writeSV(sizedValue, .utf8TextString, into: &buffer)
+        case .array(let sizedValue):
+            writeSV(sizedValue, .array, into: &buffer)
+        case .object(let sizedValue):
+            writeSV(sizedValue, .object, into: &buffer)
+        case .tag(let tag):
+            tag.write(.tag, into: &buffer)
+        case .simple(let simple):
+            simple.write(into: &buffer)
+        case .floatingPoint(let floatValue):
+            floatValue.write(into: &buffer)
+        case .break:
+            buffer.writeInteger(0xff as UInt8)
+        }
+    }
+}
+
+extension DataItemHeader.SizedValue: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: UInt64) {
+        self = Self.uint64(value).normalized()
+    }
+
+    public init(_ source: UInt64) {
+        self.init(integerLiteral: source)
+    }
+}
+
+extension DataItemHeader: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: Int) {
+        if value >= 0 {
+            self = .unsignedInteger(SizedValue(UInt64(value)))
+        } else {
+            self = .negativeInteger(data: SizedValue(UInt64(~value)))
+        }
+    }
+
+    public init(_ source: Int) {
+        self.init(integerLiteral: source)
+    }
+}
+
+extension DataItemHeader {
     public struct ImmediateValue: RawRepresentable, Hashable {
         public let rawValue: UInt8
         public init?(rawValue: UInt8) {
@@ -261,135 +391,5 @@ public enum DataItemHeader: Hashable {
             }
             self.rawValue = value
         }
-    }
-
-    public init(from buffer: inout ByteBuffer) throws {
-        guard let initialByte: UInt8 = buffer.readInteger() else {
-            throw DeserializationError.endOfStream(offset: buffer.readerIndex)
-        }
-
-        let majorType = MajorType(initialByte: initialByte)
-        let additionalInfo = AdditionalInfo(initialByte: initialByte)
-        switch (majorType, additionalInfo) {
-        case (.unsignedInteger, let info?):
-            self = .unsignedInteger(try SizedValue(info: info, from: &buffer))
-        case (.negativeInteger, let info?):
-            self = .negativeInteger(data: try SizedValue(info: info, from: &buffer))
-        case (.byteString, let info):
-            self = .byteString(length: try info.map { try SizedValue(info: $0, from: &buffer) })
-        case (.utf8TextString, let info):
-            self = .utf8TextString(length: try info.map { try SizedValue(info: $0, from: &buffer) })
-        case (.array, let info):
-            self = .array(count: try info.map { try SizedValue(info: $0, from: &buffer) })
-        case (.object, let info):
-            self = .object(pairs: try info.map { try SizedValue(info: $0, from: &buffer) })
-        case (.tag, let info?):
-            self = .tag(id: try SizedValue(info: info, from: &buffer))
-        case (.etc, let info):
-            self = try .cborFromEtc(info, from: &buffer)
-        default:
-            throw WellFormednessError.unknownInitialByte(initialByte: initialByte, offset: buffer.readerIndex)
-        }
-    }
-
-    private static func cborFromEtc(_ additionalInfo: AdditionalInfo?, from buffer: inout ByteBuffer) throws ->
-        DataItemHeader {
-        guard let additionalInfo = additionalInfo else {
-            return .break
-        }
-        let sizedValue = try SizedValue(info: additionalInfo, from: &buffer)
-        switch sizedValue {
-        case .immediate(let value):
-            return .simple(SimpleValue(value))
-        case .uint8(let value):
-            guard let simpleValue = SimpleValue(rawValue: value) else {
-                throw WellFormednessError.invalidSimpleValue(value: value, offset: buffer.readerIndex)
-            }
-            return .simple(simpleValue)
-        case .uint16(let value):
-            return .floatingPoint(.half(value))
-        case .uint32(let value):
-            return .floatingPoint(.float(Float(bitPattern: value)))
-        case .uint64(let value):
-            return .floatingPoint(.double(Double(bitPattern: value)))
-        }
-    }
-
-    public var isCompleteDataItem: Bool {
-        switch self {
-        case .negativeInteger, .unsignedInteger, .simple, .floatingPoint:
-            return true
-        case .array(let sizedValue?),
-             .byteString(let sizedValue?),
-             .object(let sizedValue?),
-             .utf8TextString(let sizedValue?):
-            return sizedValue.value == 0
-        case .break, .tag:
-            return false
-        default:
-            return false
-        }
-    }
-
-    public static let `false`         = Self.simple(SimpleValue(rawValue: 0x14)!)
-    public static let `true`          = Self.simple(SimpleValue(rawValue: 0x15)!)
-    public static let null            = Self.simple(SimpleValue(rawValue: 0x16)!)
-    public static let undefined       = Self.simple(SimpleValue(rawValue: 0x17)!)
-
-    func writeSV(_ sizedValue: SizedValue?, _ majorType: MajorType, into buffer: inout ByteBuffer) {
-        guard let sizedValue = sizedValue else {
-            buffer.writeInteger(majorType.rawValue | 0x1f)
-            return
-        }
-        sizedValue.write(majorType, into: &buffer)
-    }
-
-    public func write(into buffer: inout ByteBuffer) {
-        switch self {
-        case .unsignedInteger(let sizedValue):
-            sizedValue.write(.unsignedInteger, into: &buffer)
-        case .negativeInteger(let sizedValue):
-            sizedValue.write(.negativeInteger, into: &buffer)
-        case .byteString(let sizedValue):
-            writeSV(sizedValue, .byteString, into: &buffer)
-        case .utf8TextString(let sizedValue):
-            writeSV(sizedValue, .utf8TextString, into: &buffer)
-        case .array(let sizedValue):
-            writeSV(sizedValue, .array, into: &buffer)
-        case .object(let sizedValue):
-            writeSV(sizedValue, .object, into: &buffer)
-        case .tag(let tag):
-            tag.write(.tag, into: &buffer)
-        case .simple(let simple):
-            simple.write(into: &buffer)
-        case .floatingPoint(let floatValue):
-            floatValue.write(into: &buffer)
-        case .break:
-            buffer.writeInteger(0xff as UInt8)
-        }
-    }
-}
-
-extension DataItemHeader.SizedValue: ExpressibleByIntegerLiteral {
-    public init(integerLiteral value: UInt64) {
-        self = Self.uint64(value).normalized()
-    }
-
-    public init(_ source: UInt64) {
-        self.init(integerLiteral: source)
-    }
-}
-
-extension DataItemHeader: ExpressibleByIntegerLiteral {
-    public init(integerLiteral value: Int) {
-        if value >= 0 {
-            self = .unsignedInteger(SizedValue(UInt64(value)))
-        } else {
-            self = .negativeInteger(data: SizedValue(UInt64(~value)))
-        }
-    }
-
-    public init(_ source: Int) {
-        self.init(integerLiteral: source)
     }
 }
